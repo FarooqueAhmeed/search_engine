@@ -1,0 +1,49 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Google</title>
+	<link rel="icon"  href="favicon.ico">
+	<link rel="stylesheet" type="text/css" href="{% static 'css/style.css'%}">
+</head>
+
+
+<body>
+      <nav>
+      	<a href="#">Gmail</a>
+      	<a href="#">Images</a>
+      	<img src="{% static 'img/g-menu.PNG'%}">
+      	<button>Sign in</button>
+      </nav>
+      <section class="section-1">
+      	<img style="height: 64px;" src="https://www.kindpng.com/picc/m/195-1951310_your-logo-here-png-monochrome-transparent-png.png" class="logo">
+      	<form><br><br>
+      		<div class="s-box">
+      			<img src="{% static 'img/search.svg'%}" class="search-icon">
+      			<input type="text" class="s-input">
+      			<img src="{% static 'img/vs.png'%}" class="vs-icon">
+      			<input type="submit" class="s-btn" value="Search">
+      		</div>
+      	</form>
+
+      </section>
+      <footer>
+      	<div class="links">
+      		<div class="link-1">
+      			<a href="#">Advertising</a>
+      			<a href="#">Business</a>
+      			<a href="#">About</a>
+      			<a href="#">How Search works</a>
+      		</div>
+      		<div class="link-2">
+      			<a href="#">Privacy</a>
+      			<a href="#">Terms</a>
+      			<a href="#">Settings</a>
+      		</div>
+      	</div>
+      </footer>
+
+</body>
+</html>
