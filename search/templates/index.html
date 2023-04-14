@@ -19,10 +19,10 @@
       </nav>
       <section class="section-1">
       	<img style="height: 64px;" src="https://www.kindpng.com/picc/m/195-1951310_your-logo-here-png-monochrome-transparent-png.png" class="logo">
-      	<form><br><br>
+      	<form action="{% url 'search' %}"  method="get"><br><br>
       		<div class="s-box">
       			<img src="{% static 'img/search.svg'%}" class="search-icon">
-      			<input type="text" class="s-input">
+      			<input type="text" name="q" id="q" class="s-input" value="{{ request.GET.q }}">
       			<img src="{% static 'img/vs.png'%}" class="vs-icon">
       			<input type="submit" class="s-btn" value="Search">
       		</div>

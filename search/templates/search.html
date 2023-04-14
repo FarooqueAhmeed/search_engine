@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+
+
+
+    <h1>Search Results for "{{ query }}"</h1>
+
+
+
+
+        <h1>abstract_url : {{ abstract_url }}</h1>
+
+    {% if abstract %}
+        <h2>Abstract:</h2>
+        <p>{{ abstract_text }}</p>
+    {% endif %}
+
+    {% if definition %}
+        <h2>Definition:</h2>
+        <p>{{ definition }}</p>
+    {% endif %}
+
+    {% if entity %}
+        <h2>Entity:</h2>
+        <p>{{ entity }}</p>
+    {% endif %}
+
+    {% if image %}
+        <h2>Image:</h2>
+        <img src="{{ image }}" alt="DuckDuckGo Image">
+    {% endif %}
+
+<h2>{{ heading }}</h2>
+<p>{{ abstract_text }}</p>
+{% if related_topics %}
+  <h3>Related Topics:</h3>
+  <ul>
+    {% for topic in related_topics %}
+      <li>{{ topic.Text }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+    {% if results %}
+        <h2>Search Results:</h2>
+        <ul>
+            {% for result in results %}
+      <li>
+        <a href="{{ result.FirstURL }}">{{ result.Text }}</a>
+      </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+
+
+
+
+</body>
+</html>
