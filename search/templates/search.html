@@ -7,10 +7,10 @@
     <title>{{ query }}</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css'%}">
     <!-- CSS only -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css" integrity="sha512-kn5HejCbkU6rs/7TH1wuTZvdy46zljIt+31pNlUdDNRU26Y9XK5U5J6O5G6BOQzvUCarwAzjKzNYayJiVDUikA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <!-- JavaScript Bundle with Popper -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js" integrity="sha512-cIn92tf3q1IjLdJ17A1v9XWlN8Pp7E0+lByjA0/NoWet8SDap+b7VjLQzsmCOfl/iS8S+0Trqg17EhG9XfY0Lg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js"  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
   ul {
     list-style-type: none;
@@ -35,14 +35,20 @@
 
       </section>
 
+<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist" style="padding-left: 222px;">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">All</button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Images</button>
+  </li>
+
+</ul>
+<div class="tab-content" id="pills-tabContent">
+  <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
 
 
-
-{#  <p style="padding-left: 222px;">Total Results: {{ total_results }}</p>#}
-      <br>
-
-
-  <ul style="list-style-type: none; padding-left: 222px;">
+        <ul style="list-style-type: none; padding-left: 222px;">
   {% for item in items %}
     <li>
       <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>
@@ -52,6 +58,30 @@
     <li>No results found.</li>
   {% endfor %}
 </ul>
+
+
+  </div>
+  <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
+
+<div class="row row-cols-1 row-cols-md-3 g-3">
+  {% for image_url in image_urls %}
+    <div class="col">
+      <div class="card">
+        <img src="{{ image_url }}" class="card-img-top" alt="{{ query }}">
+      </div>
+    </div>
+  {% empty %}
+    <p>No results found.</p>
+  {% endfor %}
+</div>
+
+
+
+  </div>
+
+</div>
+
+
 
 
 
