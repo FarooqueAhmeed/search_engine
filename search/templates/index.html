@@ -4,19 +4,14 @@
 <html>
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Google</title>
+	<title>Search</title>
 	<link rel="icon"  href="favicon.ico">
 	<link rel="stylesheet" type="text/css" href="{% static 'css/style.css'%}">
 </head>
 
 
 <body>
-      <nav>
-      	<a href="#">Gmail</a>
-      	<a href="#">Images</a>
-      	<img src="{% static 'img/g-menu.PNG'%}">
-      	<button>Sign in</button>
-      </nav>
+
       <section class="section-1">
       	<img style="height: 64px;" src="https://www.kindpng.com/picc/m/195-1951310_your-logo-here-png-monochrome-transparent-png.png" class="logo">
       	<form action="{% url 'search' %}"  method="get"><br><br>

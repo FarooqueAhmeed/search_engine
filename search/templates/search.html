@@ -1,62 +1,57 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>{{ query }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css'%}">
+    <!-- CSS only -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css" integrity="sha512-kn5HejCbkU6rs/7TH1wuTZvdy46zljIt+31pNlUdDNRU26Y9XK5U5J6O5G6BOQzvUCarwAzjKzNYayJiVDUikA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js" integrity="sha512-cIn92tf3q1IjLdJ17A1v9XWlN8Pp7E0+lByjA0/NoWet8SDap+b7VjLQzsmCOfl/iS8S+0Trqg17EhG9XfY0Lg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<style>
+  ul {
+    list-style-type: none;
+  }
+</style>
+
 </head>
 <body>
 
 
 
 
-    <h1>Search Results for "{{ query }}"</h1>
+      <section class="section-1" style="flex: 0;">
+      	<form action="{% url 'search' %}"  method="get"><br><br>
+      		<div class="s-box">
+      			<img src="{% static 'img/search.svg'%}" class="search-icon">
+      			<input type="text" name="q" id="q" class="s-input" value="{{ query }}">
+      			<img src="{% static 'img/vs.png'%}" class="vs-icon">
+      			<input type="submit" class="s-btn" value="Search">
+      		</div>
+      	</form>
+
+      </section>
 
 
 
 
-        <h1>abstract_url : {{ abstract_url }}</h1>
+{#  <p style="padding-left: 222px;">Total Results: {{ total_results }}</p>#}
+      <br>
 
-    {% if abstract %}
-        <h2>Abstract:</h2>
-        <p>{{ abstract_text }}</p>
-    {% endif %}
 
-    {% if definition %}
-        <h2>Definition:</h2>
-        <p>{{ definition }}</p>
-    {% endif %}
-
-    {% if entity %}
-        <h2>Entity:</h2>
-        <p>{{ entity }}</p>
-    {% endif %}
-
-    {% if image %}
-        <h2>Image:</h2>
-        <img src="{{ image }}" alt="DuckDuckGo Image">
-    {% endif %}
-
-<h2>{{ heading }}</h2>
-<p>{{ abstract_text }}</p>
-{% if related_topics %}
-  <h3>Related Topics:</h3>
-  <ul>
-    {% for topic in related_topics %}
-      <li>{{ topic.Text }}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
-
-    {% if results %}
-        <h2>Search Results:</h2>
-        <ul>
-            {% for result in results %}
-      <li>
-        <a href="{{ result.FirstURL }}">{{ result.Text }}</a>
-      </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+  <ul style="list-style-type: none; padding-left: 222px;">
+  {% for item in items %}
+    <li>
+      <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>
+      <p>{{ item.snippet }}</p>
+    </li>
+  {% empty %}
+    <li>No results found.</li>
+  {% endfor %}
+</ul>
 
 
 
