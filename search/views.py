@@ -1,12 +1,59 @@
 from django.shortcuts import render
 import requests
-
+from bs4 import BeautifulSoup
 
 def index(request):
     pass
 
 
     return render(request, 'index.html',locals())
+
+
+def get_news(query):
+    url = f"https://www.google.com/search?q={query}&tbm=nws"
+
+    # Set the headers to mimic a browser request
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
+
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    news_div = soup.find('div', class_='MjjYud')
+
+    news_list = []
+    # Loop through all the news articles and add their details to the list
+    for article in news_div.find_all('div', class_='SoaBEf'):
+        headline = article.find('div', class_='vJOb1e').get_text()
+        link = article.find('a')['href']
+        news_dict = {'headline': headline, 'link': link}
+        news_list.append(news_dict)
+
+    return news_list
+
+
+def get_video_results(query):
+    url = f"https://www.google.com/search?q={query}&tbm=vid"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    video_links = soup.find_all("div", class_="DhN8Cf")
+
+    results = []
+    for link in video_links:
+        href_link = link.a['href']
+        title = link.h3.text
+        results.append({'link': href_link, 'title': title})
+
+    return results
+
+
 
 def google_search_images(query, search_type='web'):
     url = "https://www.googleapis.com/customsearch/v1"
@@ -42,5 +89,153 @@ def search(request):
     images_items = result_images.get("items", [])
     image_urls = [item.get("link", "") for item in images_items]
 
+    #news
+    news_list = get_news(query)
+
+    #videos
+    video_results = get_video_results(query)
+
 
     return render(request, 'search.html', locals())
+
+
+
+
+
+
+
+
+
+
+
+#google search scrape :
+
+
+
+
+
+#web
+#
+#
+# import requests
+# from bs4 import BeautifulSoup
+#
+# query = "web scraping with python"
+# url = f"https://www.google.com/search?q={query}"
+#
+# # Set the headers to mimic a browser request
+# headers = {
+#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+# }
+#
+# # Send a GET request to the Google search results page
+# response = requests.get(url, headers=headers)
+#
+# # Create a BeautifulSoup object
+# soup = BeautifulSoup(response.content, "html.parser")
+#
+# # Find all search result links and titles
+# search_results = soup.select(".yuRUbf a")
+# for result in search_results:
+#     link = result.get("href")
+#     title = result.find("h3").get_text()
+#     print("Link:", link)
+#     print("Title:", title)
+#
+#
+#
+#
+#
+# #images
+#
+#
+# import requests
+# from bs4 import BeautifulSoup
+#
+# query = "apple"
+# url = f"https://www.google.com/search?q={query}&tbm=isch"
+#
+# # Set the headers to mimic a browser request
+# headers = {
+#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+# }
+#
+# # Send a GET request to the Google Images search results page
+# response = requests.get(url, headers=headers)
+#
+# # Create a BeautifulSoup object
+# soup = BeautifulSoup(response.content, "html.parser")
+#
+# # Find all image URLs and display them
+# image_links = soup.select(".rg_i")
+# for link in image_links:
+#     try:
+#         image_url = link["data-src"]
+#     except KeyError:
+#         image_url = link["src"]
+#     print("Image URL:", image_url)
+#
+#
+#
+# #news:
+#
+# import requests
+# from bs4 import BeautifulSoup
+#
+# query = "apple"
+# url = f"https://www.google.com/search?q={query}&tbm=nws"
+#
+# # Set the headers to mimic a browser request
+# headers = {
+#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+# }
+#
+# response = requests.get(url, headers=headers)
+# soup = BeautifulSoup(response.content, 'html.parser')
+# news_div = soup.find('div', class_='MjjYud')
+#
+#
+# # Loop through all the news articles and print their details
+# for article in news_div.find_all('div', class_='SoaBEf'):
+#     headline = article.find('div', class_='vJOb1e').get_text()
+#     link = article.find('a')['href']
+#     print("Headline and Link:", [headline, link])
+#
+#
+#
+#
+#
+#
+#
+# #videos :
+#
+#
+#
+# import requests
+# from bs4 import BeautifulSoup
+#
+# query = "apple"
+# url = f"https://www.google.com/search?q={query}&tbm=vid"
+#
+# # Set the headers to mimic a browser request
+# headers = {
+#     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+# }
+#
+# # Send a GET request to the URL with headers
+# response = requests.get(url, headers=headers)
+#
+# # Parse the HTML content of the response with BeautifulSoup
+# soup = BeautifulSoup(response.content, "html.parser")
+#
+# # Find all the links with class "DhN8Cf" inside the video section
+# video_links = soup.find_all("div", class_="DhN8Cf")
+#
+# # Loop through the links and extract the href links and the text inside the h3 tag
+# for link in video_links:
+#     href_link = link.a['href']
+#     title = link.h3.text
+#     print(f"Link: {href_link}")
+#     print(f"Title: {title}\n")
+#
+#

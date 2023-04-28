@@ -28,7 +28,7 @@
       		<div class="s-box">
       			<img src="{% static 'img/search.svg'%}" class="search-icon">
       			<input type="text" name="q" id="q" class="s-input" value="{{ query }}">
-      			<img src="{% static 'img/vs.png'%}" class="vs-icon">
+
       			<input type="submit" class="s-btn" value="Search">
       		</div>
       	</form>
@@ -42,6 +42,21 @@
   <li class="nav-item" role="presentation">
     <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Images</button>
   </li>
+
+      <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-news-tab" data-bs-toggle="pill" data-bs-target="#pills-news" type="button" role="tab" aria-controls="pills-news" aria-selected="false">News</button>
+  </li>
+      <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-videos-tab" data-bs-toggle="pill" data-bs-target="#pills-videos" type="button" role="tab" aria-controls="pills-videos" aria-selected="false">Videos</button>
+  </li>
+
+          <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-shopping-tab" data-bs-toggle="pill" data-bs-target="#pills-shopping" type="button" role="tab" aria-controls="pills-shopping" aria-selected="false">Shopping</button>
+         </li>
+
+              <li class="nav-item" role="presentation">
+    <button class="nav-link" id="pills-maps-tab" data-bs-toggle="pill" data-bs-target="#pills-maps" type="button" role="tab" aria-controls="pills-maps" aria-selected="false">Maps</button>
+         </li>
 
 </ul>
 <div class="tab-content" id="pills-tabContent">
@@ -79,8 +94,81 @@
 
   </div>
 
+
+
+
+
+
+<div class="tab-pane fade" id="pills-news" role="tabpanel" aria-labelledby="pills-news-tab">
+
+        <ul style="list-style-type: none; padding-left: 222px;">
+
+             {% for news in news_list %}
+        <div class="news-item">
+            <div class="news-item-title">
+                <a href="{{ news.link }}" target="_blank">{{ news.link }}</a>
+            </div>
+        <p>  {{ news.headline }}</p>
+        </div>
+                   {% empty %}
+    <p>No results found.</p>
+    {% endfor %}
+
+</ul>
+
 </div>
 
+
+<div class="tab-pane fade" id="pills-videos" role="tabpanel" aria-labelledby="pills-videos-tab">
+
+        <ul style="list-style-type: none; padding-left: 222px;">
+
+        {% for result in video_results %}
+            <li>
+                <a href="{{ result.link }}" target="_blank">{{ result.link }}</a>
+            <h3>{{ result.title }} </h3>
+            </li>
+
+              {% empty %}
+    <p>No results found.</p>
+
+
+        {% endfor %}
+
+</ul>
+
+</div>
+
+
+
+
+
+
+<div class="tab-pane fade" id="pills-shopping" role="tabpanel" aria-labelledby="pills-shopping-tab">
+
+<div class="jumbotron jumbotron-fluid" style="list-style-type: none; padding-left: 222px;">
+  <div class="container">
+    <h1 class="display-4">Not operational</h1>
+  </div>
+</div>
+
+</div>
+
+
+<div class="tab-pane fade" id="pills-maps" role="tabpanel" aria-labelledby="pills-maps-tab">
+
+<div class="jumbotron jumbotron-fluid" style="list-style-type: none; padding-left: 222px;">
+  <div class="container">
+    <h1 class="display-4">Not operational</h1>
+  </div>
+</div>
+
+</div>
+
+
+
+
+</div>
 
 
 
