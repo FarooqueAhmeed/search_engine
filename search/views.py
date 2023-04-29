@@ -4,9 +4,93 @@ from bs4 import BeautifulSoup
 
 def index(request):
     pass
-
-
     return render(request, 'index.html',locals())
+
+
+def web_bing(query):
+    url = f"https://www.bing.com/search?q={query}&setlang=en"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    search_results = soup.find_all("li", class_="b_algo")
+    results = []
+    for result in search_results:
+        title = result.find("h2").text
+        url = result.find("a")["href"]
+        snippet = result.find("div", class_="b_caption").find("p").text
+        results.append({"title": title, "url": url, "snippet": snippet})
+    return results
+
+
+
+
+def bing_images(query):
+    image_url = f"https://www.bing.com/images/search?q={query}&setlang=en"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
+    response = requests.get(image_url, headers=headers)
+    soup = BeautifulSoup(response.content, "html.parser")
+    search_results = soup.find_all("div", class_="imgpt")
+
+    # Create an empty list to store the image links
+    links = []
+
+    # Loop through the search results and get the src attribute of each img tag
+    for result in search_results:
+        img = result.find("img")
+        if img:
+            # Use a try-except block to handle the KeyError
+            try:
+                link = img["src"]
+                # Append the link to the list
+                links.append(link)
+            except KeyError:
+                # Skip the tag if it does not have a src attribute
+                pass
+    return links
+
+
+def bing_news(query):
+    url = f"https://www.bing.com/news/search?q={query}&setlang=en"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    news_cards = soup.find_all("div", class_="news-card")
+    news_list = []
+    for card in news_cards:
+        title = card.find("a", class_="title").text
+        link = card.find("a", class_="title")["href"]
+        news_list.append({'title': title, 'link': link})
+    return news_list
+
+
+
+def bing_video(query):
+    url = f"https://www.bing.com/videos/search?q={query}&setlang=en"
+
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # find all video results
+    video_results = soup.find_all('div', {'class': 'dg_u'})
+
+    # extract the aria-label and href attributes for each a tag inside the class="mc_vtvc"
+    results = []
+    for video in video_results:
+        mc_vtvc_div = video.find('div', {'class': 'mc_vtvc'})
+        a_tags = mc_vtvc_div.find_all('a')
+
+        for a_tag in a_tags:
+            aria_label = a_tag.get('aria-label', '')
+            url = a_tag.get('href', '')
+
+            results.append({'aria_label': aria_label, 'url': url})
+
+    return results
+
 
 
 def get_news(query):
@@ -80,6 +164,8 @@ def google_search(query):
 
 def search(request):
     query = request.GET.get('q')
+
+    #Google
     result = google_search(query)
     items = result["items"]
     total_results = result["searchInformation"]["totalResults"]
@@ -94,6 +180,13 @@ def search(request):
 
     #videos
     video_results = get_video_results(query)
+
+
+    #Bing
+    bing_result_web = web_bing(query)
+    bing_result_images = bing_images(query)
+    bing_news_list = bing_news(query)
+    bing_video_list    = bing_video(query)
 
 
     return render(request, 'search.html', locals())
