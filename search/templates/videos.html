@@ -75,37 +75,88 @@
 
         <ul style="list-style-type: none; padding-left: 222px;">
 
-        {% for result in video_results %}
-            <li>
-                <a href="{{ result.link }}" target="_blank">{{ result.link }}</a>
-            <h3>{{ result.title }} </h3>
+       {% for video in page_obj %}
+
+                <li>
+                <a href="{{ video.url }}" target="_blank">{{ video.name }}</a>
             </li>
 
-              {% empty %}
-    <p>No results found.</p>
+{#        <div class="video">#}
+{#            <h2>{{ video.name }}</h2>#}
+{#            <video controls>#}
+{#                <source src="{{ video.url }}" type="video/mp4">#}
+{#            </video>#}
+{#        </div>#}
+    {% endfor %}
+
+    {% if not page_obj %}
+        <p>No videos found.</p>
+    {% endif %}
 
 
-        {% endfor %}
+
+        </ul>
 
 
 
 
-        <ul style="list-style-type: none; padding-left: 0px;">
-
-        {% for result in bing_video_list %}
-            <li>
-                <a href="{{ result.url }}" target="_blank">{{ result.aria_label }}</a>
-
-            </li>
-
-              {% empty %}
-    <p>No results found.</p>
 
 
-        {% endfor %}
 
-</ul>
+{#        {% for result in video_results %}#}
+{#            <li>#}
+{#                <a href="{{ result.link }}" target="_blank">{{ result.link }}</a>#}
+{#            <h3>{{ result.title }} </h3>#}
+{#            </li>#}
+{##}
+{#              {% empty %}#}
+{#    <p>No results found.</p>#}
+{##}
+{##}
+{#        {% endfor %}#}
 
+
+
+
+{#        <ul style="list-style-type: none; padding-left: 222px;">#}
+{##}
+{#        {% for result in bing_video_list %}#}
+{#            <li>#}
+{#                <a href="{{ result.url }}" target="_blank">{{ result.aria_label }}</a>#}
+{##}
+{#            </li>#}
+{##}
+{#              {% empty %}#}
+{#    <p>No results found.</p>#}
+{##}
+{##}
+{#        {% endfor %}#}
+{##}
+{#</ul>#}
+
+
+
+
+
+{% if page_obj.has_other_pages %}
+        <div class="pagination" style="list-style-type: none; padding-left: 222px;">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current-page">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
 </div>
 
 

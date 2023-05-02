@@ -139,7 +139,7 @@ def get_video_results(query):
 
 
 
-def google_search_images(query, search_type='web'):
+def google_search_images(query, search_type='image'):
     url = "https://www.googleapis.com/customsearch/v1"
     params = {
         "q": query,
@@ -160,15 +160,37 @@ def google_search(query):
     }
     response = requests.get(url, params=params)
     return response.json()
-
+from django.core.paginator import Paginator
 
 def search(request):
     query = request.GET.get('q')
 
     #Google
-    result = google_search(query)
+    # result = google_search(query)
+    # items = result["items"]
+    # total_results = result["searchInformation"]["totalResults"]
+
+    page = request.GET.get('page', 1)
+
+    url = "https://www.googleapis.com/customsearch/v1"
+    params = {
+        "q": query,
+        "key": 'AIzaSyDxBnA4Wwhh1sH3gFOZ2nQl_smU3uO3BBA',
+        "cx": "c772d9b1605014105",
+        "start": (int(page) - 1) * 10 + 1
+    }
+    response = requests.get(url, params=params)
+    result = response.json()
     items = result["items"]
     total_results = result["searchInformation"]["totalResults"]
+
+    paginator = Paginator(items, 10)
+    page_obj = paginator.get_page(page)
+
+
+
+
+
 
     #images
     # result_images = google_search_images(query, search_type="image")
@@ -192,6 +214,16 @@ def search(request):
     return render(request, 'search.html', locals())
 
 
+
+def bing_search_images_2(query, api_key):
+    url = "https://api.bing.microsoft.com/v7.0/images/search"
+    headers = {"Ocp-Apim-Subscription-Key": api_key}
+    params = {"q": query, "count": 50, "offset": 0, "imageType": "photo"}
+
+    response = requests.get(url, headers=headers, params=params)
+    return response.json()
+
+
 def google_images_search(request,query):
 
     #images
@@ -199,24 +231,106 @@ def google_images_search(request,query):
     images_items = result_images.get("items", [])
     image_urls = [item.get("link", "") for item in images_items]
     print("image_urls",image_urls)
-    bing_result_images = bing_images(query)
-    print("bing_result_images",bing_result_images)
+    # bing_result_images = bing_images(query)
+    # print("bing_result_images",bing_result_images)
+    bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+    bing_results = bing_search_images_2(query, bing_api_key)
 
+    image_urls = []
+    for item in bing_results.get("value", []):
+        image_urls.append(item['contentUrl'])
     return render(request, 'google_images_search.html', locals())
 
 
-def news(request,query):
-    # news
-    news_list = get_news(query)
-    bing_news_list = bing_news(query)
+def google_search_news_2(query):
+    url = "https://www.googleapis.com/customsearch/v1"
+    all_results = []
+    num_results=10
+    for start in range(1, num_results, 10):
+        params = {
+            "q": query,
+                  "key": "AIzaSyDxBnA4Wwhh1sH3gFOZ2nQl_smU3uO3BBA",
+                  "cx": "c772d9b1605014105",
+            "start": start,
+            "tbm": "nws",
+        }
+        response = requests.get(url, params=params)
 
-    return render(request, 'news.html', locals())
+        if response.status_code == 200:
+            all_results.extend(response.json()["items"])
+        else:
+            print(f"Error: {response.status_code}")
+            break
+
+    return all_results
+
+
+
+
+def bing_search_news_2(query, api_key, offset=0):
+    url = "https://api.bing.microsoft.com/v7.0/news/search"
+    headers = {"Ocp-Apim-Subscription-Key": api_key}
+    params = {"q": query, "count": 50, "offset": offset}
+
+    response = requests.get(url, headers=headers, params=params)
+    return response.json()
+
+
+def news(request, query):
+    # news
+   # news_list = get_news(query)
+    #news_list = google_search_news_2(query)
+    #bing_news_list = bing_news(query)
+    bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+
+    page_number = request.GET.get('page', 1)
+    offset = (int(page_number) - 1) * 50
+    bing_news_list = bing_search_news_2(query, bing_api_key, offset)
+
+    paginator = Paginator(bing_news_list['value'], 10)
+
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'bing_results': page_obj,
+        #'news_list': news_list,
+        'query': query,
+    }
+    return render(request, 'news.html', context)
+
+
+
+def bing_search_videos_2(query, api_key, offset=0):
+    url = "https://api.bing.microsoft.com/v7.0/videos/search"
+    headers = {"Ocp-Apim-Subscription-Key": api_key}
+    params = {"q": query, "count": 50, "offset": offset, "responseFilter": "Video"}
+
+    response = requests.get(url, headers=headers, params=params)
+    return response.json()
 
 
 def videos(request,query):
     #videos
-    video_results = get_video_results(query)
-    bing_video_list    = bing_video(query)
+    #video_results = get_video_results(query)
+
+    bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+    videos = []
+    page_number = int(request.GET.get('page', 1))
+
+
+    # Call Bing API with pagination
+    for offset in range((page_number - 1) * 50, page_number * 50, 50):
+        bing_results = bing_search_videos_2(query, bing_api_key, offset)
+        for item in bing_results.get("value", []):
+            name = item["name"]
+            url = item["contentUrl"]
+            videos.append({"name": name, "url": url})
+
+    # Use Django's built-in paginator to paginate the results
+    paginator = Paginator(videos, 10)
+    page_obj = paginator.get_page(page_number)
+
+    #bing_video_list    = bing_video(query)
     return render(request, 'videos.html', locals())
 
 

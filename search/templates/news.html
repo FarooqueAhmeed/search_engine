@@ -70,38 +70,98 @@
 
 <div >
 
+
+
+
+{#        <ul style="list-style-type: none; padding-left: 222px;">#}
+{##}
+{#             {% for news in news_list %}#}
+{#        <div class="news-item">#}
+{#            <div class="news-item-title">#}
+{#                <a href="{{ news.link }}" target="_blank">{{ news.link }}</a>#}
+{#            </div>#}
+{#        <p>  {{ news.headline }}</p>#}
+{#        </div>#}
+{#                   {% empty %}#}
+{#    <p>No results found.</p>#}
+{#    {% endfor %}#}
+{##}
+{#</ul>#}
+
+{#        <ul style="list-style-type: none; padding-left: 222px;">#}
+{##}
+{#        {% for result in news_list %}#}
+{#            <li>#}
+{#                <a href="{{ result.link }}">{{ result.title }}</a>#}
+{#                <p>{{ result.snippet }}</p>#}
+{#            </li>#}
+{#                   {% empty %}#}
+{#    <p>No results found.</p>#}
+{#    {% endfor %}#}
+{##}
+{#    </ul>#}
+
+
+
+
+    {% if bing_results %}
         <ul style="list-style-type: none; padding-left: 222px;">
-
-             {% for news in news_list %}
-        <div class="news-item">
-            <div class="news-item-title">
-                <a href="{{ news.link }}" target="_blank">{{ news.link }}</a>
-            </div>
-        <p>  {{ news.headline }}</p>
-        </div>
-                   {% empty %}
-    <p>No results found.</p>
-    {% endfor %}
-
-</ul>
+        {% for item in bing_results %}
+            <li>
+                <a href="{{ item.url }}" target="_blank">{{ item.name }}</a><br>
+                {{ item.description }}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found.</p>
+    {% endif %}
 
 
 
 
-        <ul style="list-style-type: none; padding-left: 222px;">
+<div class="pagination" style=" padding-left: 222px;">
+    <span class="step-links">
+        {% if bing_results.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ bing_results.previous_page_number }}">previous</a>
+        {% endif %}
 
-             {% for news in bing_news_list  %}
-        <div class="news-item">
-            <div class="news-item-title">
-                <a href="{{ news.link }}" target="_blank">{{ news.link }}</a>
-            </div>
-        <p>  {{ news.title  }}</p>
-        </div>
-                   {% empty %}
-    <p>No results found.</p>
-    {% endfor %}
+        <span class="current-page">
+            Page {{ bing_results.number }} of {{ bing_results.paginator.num_pages }}.
+        </span>
 
-</ul>
+        {% if bing_results.has_next %}
+            <a href="?page={{ bing_results.next_page_number }}">next</a>
+            <a href="?page={{ bing_results.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+{#    {% if bing_results %}#}
+{#        <ul style="list-style-type: none; padding-left: 222px;">#}
+{#        {% for item in bing_results %}#}
+{#            <li>#}
+{#                <a href="{{ item.url }}" target="_blank">{{ item.name }}</a><br>#}
+{#                {{ item.description }}#}
+{#            </li>#}
+{#        {% endfor %}#}
+{#        </ul>#}
+{#    {% else %}#}
+{#        <p>No results found.</p>#}
+{#    {% endif %}#}
+
 
 </div>
 

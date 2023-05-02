@@ -74,12 +74,18 @@
     <p>No results found.</p>
   {% endfor %}
 
+{#<div class="image-grid">#}
+{#    {% for url in image_urls %}#}
+{#      <div class="image">#}
+{#        <img src="{{ url }}" alt="">#}
+{#      </div>#}
+{#    {% endfor %}#}
+{#  </div>#}
 
-
-  {% for image_url in bing_result_images %}
+  {% for url in image_urls %}
     <div class="col">
       <div class="card">
-        <img src="{{ image_url }}" class="card-img-top" alt="{{ query }}">
+        <img src="{{ url }}" class="card-img-top" alt="{{ query }}">
       </div>
     </div>
   {% empty %}
