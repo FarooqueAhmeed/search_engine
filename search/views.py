@@ -171,34 +171,53 @@ def search(request):
     total_results = result["searchInformation"]["totalResults"]
 
     #images
-    result_images = google_search_images(query, search_type="image")
-    images_items = result_images.get("items", [])
-    image_urls = [item.get("link", "") for item in images_items]
+    # result_images = google_search_images(query, search_type="image")
+    # images_items = result_images.get("items", [])
+    # image_urls = [item.get("link", "") for item in images_items]
 
-    #news
-    news_list = get_news(query)
+    # #news
+    # news_list = get_news(query)
 
-    #videos
-    video_results = get_video_results(query)
+    # #videos
+    # video_results = get_video_results(query)
 
 
     #Bing
     bing_result_web = web_bing(query)
-    bing_result_images = bing_images(query)
-    bing_news_list = bing_news(query)
-    bing_video_list    = bing_video(query)
+    # bing_result_images = bing_images(query)
+    # bing_news_list = bing_news(query)
+    # bing_video_list    = bing_video(query)
 
 
     return render(request, 'search.html', locals())
 
 
+def google_images_search(request,query):
+
+    #images
+    result_images = google_search_images(query, search_type="image")
+    images_items = result_images.get("items", [])
+    image_urls = [item.get("link", "") for item in images_items]
+    print("image_urls",image_urls)
+    bing_result_images = bing_images(query)
+    print("bing_result_images",bing_result_images)
+
+    return render(request, 'google_images_search.html', locals())
 
 
+def news(request,query):
+    # news
+    news_list = get_news(query)
+    bing_news_list = bing_news(query)
+
+    return render(request, 'news.html', locals())
 
 
-
-
-
+def videos(request,query):
+    #videos
+    video_results = get_video_results(query)
+    bing_video_list    = bing_video(query)
+    return render(request, 'videos.html', locals())
 
 
 #google search scrape :

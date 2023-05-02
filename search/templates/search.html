@@ -1,10 +1,12 @@
+{% extends "base.html" %}
+
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ query }}</title>
+{% block content %}
+
+
+
+
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css'%}">
     <!-- CSS only -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -17,8 +19,7 @@
   }
 </style>
 
-</head>
-<body>
+
 
 
 
@@ -36,19 +37,21 @@
       </section>
 
 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist" style="padding-left: 222px;">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home" type="button" role="tab" aria-controls="pills-home" aria-selected="true">All</button>
+  <li class="nav-item " >
+    <a class="nav-link active" href="{% url 'search' %}?q={{ query }}" type="button" >All</a>
   </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile" type="button" role="tab" aria-controls="pills-profile" aria-selected="false">Images</button>
+<li class="nav-item" >
+  <a class="nav-link"  href="{% url 'google_images_search' query %}" type="button" >Images</a>
+</li>
+
+
+      <li class="nav-item" >
+    <a class="nav-link " type="button"  href="{% url 'news' query %}">News</a>
+  </li>
+      <li class="nav-item" >
+    <a class="nav-link" type="button"  href="{% url 'videos' query %}">Videos</a>
   </li>
 
-      <li class="nav-item" role="presentation">
-    <button class="nav-link" id="pills-news-tab" data-bs-toggle="pill" data-bs-target="#pills-news" type="button" role="tab" aria-controls="pills-news" aria-selected="false">News</button>
-  </li>
-      <li class="nav-item" role="presentation">
-    <button class="nav-link" id="pills-videos-tab" data-bs-toggle="pill" data-bs-target="#pills-videos" type="button" role="tab" aria-controls="pills-videos" aria-selected="false">Videos</button>
-  </li>
 
           <li class="nav-item" role="presentation">
     <button class="nav-link" id="pills-shopping-tab" data-bs-toggle="pill" data-bs-target="#pills-shopping" type="button" role="tab" aria-controls="pills-shopping" aria-selected="false">Shopping</button>
@@ -62,61 +65,6 @@
 <div class="tab-content" id="pills-tabContent">
   <div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="pills-home-tab">
 
-{#<ul id="search-results" style="list-style-type: none; padding-left: 222px;">#}
-{#  {% for item in items %}#}
-{#    <li data-source="{{ item.source }}" draggable="true">#}
-{#      <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>#}
-{#      <p>{{ item.snippet }}</p>#}
-{#    </li>#}
-{#  {% empty %}#}
-{#    <li>No results found.</li>#}
-{#  {% endfor %}#}
-{#</ul>#}
-{##}
-{#<script>#}
-{#  var draggedItem = null;#}
-{##}
-{#  function handleDragStart(e) {#}
-{#    draggedItem = this;#}
-{#    e.dataTransfer.effectAllowed = 'move';#}
-{#  }#}
-{##}
-{#  function handleDragOver(e) {#}
-{#    if (e.preventDefault) {#}
-{#      e.preventDefault();#}
-{#    }#}
-{#    e.dataTransfer.dropEffect = 'move';#}
-{#    return false;#}
-{#  }#}
-{##}
-{#  function handleDrop(e) {#}
-{#    if (e.stopPropagation) {#}
-{#      e.stopPropagation();#}
-{#    }#}
-{#    if (draggedItem !== this) {#}
-{#      var source = draggedItem.getAttribute('data-source');#}
-{#      var target = this.getAttribute('data-source');#}
-{#      if (source === target) {#}
-{#        var parent = this.parentNode;#}
-{#        var targetIndex = Array.prototype.indexOf.call(parent.children, this);#}
-{#        var draggedIndex = Array.prototype.indexOf.call(parent.children, draggedItem);#}
-{#        if (draggedIndex < targetIndex) {#}
-{#          parent.insertBefore(draggedItem, this.nextSibling);#}
-{#        } else {#}
-{#          parent.insertBefore(draggedItem, this);#}
-{#        }#}
-{#      }#}
-{#    }#}
-{#    return false;#}
-{#  }#}
-{##}
-{#  var items = document.querySelectorAll('#search-results li');#}
-{#  [].forEach.call(items, function(item) {#}
-{#    item.addEventListener('dragstart', handleDragStart, false);#}
-{#    item.addEventListener('dragover', handleDragOver, false);#}
-{#    item.addEventListener('drop', handleDrop, false);#}
-{#  });#}
-{#</script>#}
 
     <style>
       /* Style for the item being dragged */
@@ -354,6 +302,4 @@
 
 
 
-
-</body>
-</html>
+{% endblock %}
