@@ -161,10 +161,12 @@ def google_search(query):
     response = requests.get(url, params=params)
     return response.json()
 from django.core.paginator import Paginator
+from search.models import *
+
 
 def search(request):
-    query = request.GET.get('q')
-
+    query = request.GET.get('q') or request.POST.get('query')
+    Searches.objects.create(query=query)
     #Google
     # result = google_search(query)
     # items = result["items"]
@@ -184,10 +186,31 @@ def search(request):
     items = result["items"]
     total_results = result["searchInformation"]["totalResults"]
 
+    for i, item in enumerate(items):
+        item['id_'] = i + 1
+
+        # Check if this item exists in the SearchResult model
+        try:
+            search_result = SearchResult.objects.get(title=item['title'])
+            position = search_result.position
+            # Calculate the new index of the item based on its position
+            new_index = position - 1
+            # If the new index is different from the default index, swap the item with the one at the new index
+            if new_index != i:
+                items[i], items[new_index] = items[new_index], items[i]
+                # Update the ID of the item that was swapped with the current item
+                items[new_index]['id_'] = new_index + 1
+                # Update the ID of the current item
+                item['id_'] = i + 1
+        except SearchResult.DoesNotExist:
+            pass
+
+        # Check if this item is blocked
+        if Blocked.objects.filter(title=item['title'], link=item['link']).exists():
+            items.remove(item)
+
     paginator = Paginator(items, 10)
     page_obj = paginator.get_page(page)
-
-
 
 
 
@@ -205,7 +228,7 @@ def search(request):
 
 
     #Bing
-    bing_result_web = web_bing(query)
+    #bing_result_web = web_bing(query)
     # bing_result_images = bing_images(query)
     # bing_news_list = bing_news(query)
     # bing_video_list    = bing_video(query)
@@ -332,6 +355,71 @@ def videos(request,query):
 
     #bing_video_list    = bing_video(query)
     return render(request, 'videos.html', locals())
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import SearchResult,Blocked
+
+@csrf_exempt
+def update_position(request):
+    if request.method == 'POST':
+        payload = json.loads(request.body)
+        position = payload.get('position')
+        itemId = payload.get('id_')
+        title = payload.get('title')
+        link = payload.get('link')
+        print("__Data__")
+        print("Target index : ",position)
+        print("itemId : ",itemId)
+        print(title)
+        print(link)
+
+        try:
+            get_position = SearchResult.objects.get(title=title)
+            get_position.position = position
+            get_position.save()
+        except SearchResult.DoesNotExist:
+            # If a SearchResult object with the specified title does not exist, create a new one
+            search_result = SearchResult.objects.create(title=title, link=link, position=position)
+
+
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+from django.shortcuts import redirect
+from django.urls import reverse
+
+
+@csrf_exempt
+def block_item(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        link = request.POST.get('link')
+        query = request.POST.get('query')
+        Blocked.objects.create(title=title, link=link, is_blocked=True)
+        return redirect(reverse('search') + f'?q={query}')
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #google search scrape :

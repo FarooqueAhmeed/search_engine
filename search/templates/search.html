@@ -20,6 +20,7 @@
 </style>
 
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"  crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 
 
@@ -78,45 +79,33 @@
 
 
 
-{#  {% if page_obj.has_previous %}#}
-{#    <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">Previous</a>#}
-{#  {% endif %}#}
-{##}
-{#  <span class="current-page">{{ page_obj.number }}</span>#}
-{##}
-{#  {% if page_obj.has_next %}#}
-{#    <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next</a>#}
-{#  {% endif %}#}
 
-{#  <ul>#}
-{#    {% for item in page_obj %}#}
-{#      <li>#}
-{#        <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>#}
-{#        <p>{{ item.snippet }}</p>#}
-{#      </li>#}
-{#    {% endfor %}#}
-{#  </ul>#}
+{#<ul id="search-results" style="list-style-type: none; padding-left: 222px;">#}
+{#  {% for item in page_obj %}#}
+{#    <li data-source="{{ item.source }}" draggable="true" data-targetIndex="{{ loop.index }}">#}
+{#      <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>#}
+{#      <p id="{{ item.id_ }}">{{ item.snippet }}</p>#}
+{#    </li>#}
+{#  {% empty %}#}
+{#    <li>No results found.</li>#}
+{#  {% endfor %}#}
+{#</ul>#}
 
-
-<ul id="search-results" style="list-style-type: none; padding-left: 222px;">
-      {% for item in page_obj %}
-        <li data-source="{{ item.source }}" draggable="true">
-          <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>
-          <p>{{ item.snippet }}</p>
-        </li>
-      {% empty %}
-        <li>No results found.</li>
-      {% endfor %}
-    </ul>
 
 
 
 
-          <ul id="search-results" style="list-style-type: none; padding-left: 222px;">
-  {% for item in bing_result_web %}
+<ul id="search-results" style="list-style-type: none; padding-left: 222px;">
+  {% for item in page_obj %}
     <li data-source="{{ item.source }}" draggable="true">
-      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>
-      <p>{{ item.snippet  }}</p>
+      <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>
+      <p id="{{ item.id_ }}">{{ item.snippet }}
+<a href="#" onclick="blockItem('{{ item.title }}', '{{ item.link }}', '{{ query }}')">
+  <i class="fas fa-ban" style="color: red;"></i>
+
+</a>
+
+      </p>
     </li>
   {% empty %}
     <li>No results found.</li>
@@ -125,58 +114,223 @@
 
 
 
+
+
+
 <script>
-      var draggedItem = null;
+  function blockItem(title, link, query) {
+  var is_blocked = confirm("Are you sure you want to block this item?");
+  if (is_blocked) {
+    var form = document.createElement("form");
+    form.method = "POST";
+    form.action = "/block_item";
 
-      function handleDragStart(e) {
-        draggedItem = this;
-        this.classList.add('dragging'); // Add the "dragging" class to highlight the item
-        e.dataTransfer.effectAllowed = 'move';
-      }
+    var title_input = document.createElement("input");
+    title_input.type = "hidden";
+    title_input.name = "title";
+    title_input.value = title;
 
-      function handleDragOver(e) {
-        if (e.preventDefault) {
-          e.preventDefault();
+    var link_input = document.createElement("input");
+    link_input.type = "hidden";
+    link_input.name = "link";
+    link_input.value = link;
+
+    var query_input = document.createElement("input");
+    query_input.type = "hidden";
+    query_input.name = "query";
+    query_input.value = query;
+
+    form.appendChild(title_input);
+    form.appendChild(link_input);
+    form.appendChild(query_input);
+
+    document.body.appendChild(form);
+
+    form.submit();
+  }
+}
+
+</script>
+
+
+{#          <ul id="search-results" style="list-style-type: none; padding-left: 222px;">#}
+{#  {% for item in bing_result_web %}#}
+{#    <li data-source="{{ item.source }}" draggable="true">#}
+{#      <h2><a href="{{ item.url }}">{{ item.title }}</a></h2>#}
+{#      <p>{{ item.snippet  }}</p>#}
+{#    </li>#}
+{#  {% empty %}#}
+{#    <li>No results found.</li>#}
+{#  {% endfor %}#}
+{#</ul>#}
+
+
+
+<script>
+  var draggedItem = null;
+
+  function handleDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging'); // Add the "dragging" class to highlight the item
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function handleDragOver(e) {
+    if (e.preventDefault) {
+      e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+  }
+
+  function handleDragLeave(e) {
+    this.classList.remove('over'); // Remove the "over" class
+  }
+
+  function handleDrop(e) {
+    if (e.stopPropagation) {
+      e.stopPropagation();
+    }
+    if (draggedItem !== this) {
+      var source = draggedItem.getAttribute('data-source');
+      var target = this.getAttribute('data-source');
+      if (source === target) {
+        var parent = this.parentNode;
+        var items = parent.children;
+        var draggedIndex = Array.prototype.indexOf.call(items, draggedItem);
+        var targetIndex = Array.prototype.indexOf.call(items, this);
+
+        if (draggedIndex < targetIndex) {
+          parent.insertBefore(draggedItem, this.nextSibling);
+        } else {
+          parent.insertBefore(draggedItem, this);
         }
-        e.dataTransfer.dropEffect = 'move';
-        return false;
-      }
 
-      function handleDragLeave(e) {
-        this.classList.remove('over'); // Remove the "over" class
-      }
+        // Get the title and link of the dragged item
+        var title = draggedItem.querySelector('a').innerText;
+        var link = draggedItem.querySelector('a').getAttribute('href');
 
-      function handleDrop(e) {
-        if (e.stopPropagation) {
-          e.stopPropagation();
-        }
-        if (draggedItem !== this) {
-          var source = draggedItem.getAttribute('data-source');
-          var target = this.getAttribute('data-source');
-          if (source === target) {
-            var parent = this.parentNode;
-            var targetIndex = Array.prototype.indexOf.call(parent.children, this);
-            var draggedIndex = Array.prototype.indexOf.call(parent.children, draggedItem);
-            if (draggedIndex < targetIndex) {
-              parent.insertBefore(draggedItem, this.nextSibling);
-            } else {
-              parent.insertBefore(draggedItem, this);
-            }
+        // Get the ID of the dragged item
+        var itemId = draggedItem.querySelector('p').getAttribute('id');
+
+        // Set the targetIndex of all items in the list
+        [].forEach.call(items, function(item, index) {
+          item.setAttribute('data-targetIndex', index + 1);
+        });
+
+        // Send the data to the update_position function
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/update_position');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            console.log(xhr.responseText);
+          } else {
+            console.log('Request failed.  Returned status of ' + xhr.status);
           }
-        }
-        return false;
+        };
+        xhr.send(JSON.stringify({
+          'position': targetIndex + 1,
+          'id_': itemId,
+          'title': title,
+          'link': link
+        }));
       }
+    }
+    return false;
+  }
 
-      var items = document.querySelectorAll('#search-results li');
-      [].forEach.call(items, function(item) {
-        item.addEventListener('dragstart', handleDragStart, false);
-        item.addEventListener('dragover', handleDragOver, false);
-        item.addEventListener('dragleave', handleDragLeave, false);
-        item.addEventListener('drop', handleDrop, false);
-      });
-    </script>
+  var items = document.querySelectorAll('#search-results li');
+  [].forEach.call(items, function(item, index) {
+    item.setAttribute('data-targetIndex', index + 1);
+    item.addEventListener('dragstart', handleDragStart, false);
+    item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('dragleave', handleDragLeave, false);
+    item.addEventListener('drop', handleDrop, false);
+  });
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      {#function handleDrop(e) {#}
+      {#  if (e.stopPropagation) {#}
+      {#    e.stopPropagation();#}
+      {#  }#}
+      {#  if (draggedItem !== this) {#}
+      {#    var source = draggedItem.getAttribute('data-source');#}
+      {#    var target = this.getAttribute('data-source');#}
+      {#    if (source === target) {#}
+      {#      var parent = this.parentNode;#}
+      {#      var targetIndex = Array.prototype.indexOf.call(parent.children, this);#}
+      {#      var draggedIndex = Array.prototype.indexOf.call(parent.children, draggedItem);#}
+      {#      if (draggedIndex < targetIndex) {#}
+      {#        parent.insertBefore(draggedItem, this.nextSibling);#}
+      {#      } else {#}
+      {#        parent.insertBefore(draggedItem, this);#}
+      {#      }#}
+      {#    }#}
+      {#  }#}
+      {#  return false;#}
+      <!-- } -->
+
+
+
+
 
   </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   <div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="pills-profile-tab">
 
 <div class="row row-cols-1 row-cols-md-3 g-3">
@@ -320,6 +474,25 @@
 </div>
 
 
+
+{#  {% if page_obj.has_previous %}#}
+{#    <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">Previous</a>#}
+{#  {% endif %}#}
+{##}
+{#  <span class="current-page">{{ page_obj.number }}</span>#}
+{##}
+{#  {% if page_obj.has_next %}#}
+{#    <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next</a>#}
+{#  {% endif %}#}
+
+{#  <ul>#}
+{#    {% for item in page_obj %}#}
+{#      <li>#}
+{#        <h2><a href="{{ item.link }}">{{ item.title }}</a></h2>#}
+{#        <p>{{ item.snippet }}</p>#}
+{#      </li>#}
+{#    {% endfor %}#}
+{#  </ul>#}
 
 
 
