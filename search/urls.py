@@ -11,5 +11,6 @@ urlpatterns = [
     path('videos/<str:query>', views.videos, name='videos'),
     path('update_position', views.update_position, name='update_position'),
     path('block_item', views.block_item, name='block_item'),
+    path('create_sites', views.create_sites, name='create_sites'),
 
 ]

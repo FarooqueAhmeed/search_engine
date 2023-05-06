@@ -2,6 +2,394 @@ from django.shortcuts import render
 import requests
 from bs4 import BeautifulSoup
 
+
+#############   Start  Specific searches    ##########################
+
+main_sites = ['https://www.Conservapedia.com',
+               'https://www.Ballotpedia.com',
+               'https://www.Trumpttrainnews.com',
+               'https://www.AmericanActionNews.com',
+                'https://www.AmericanDefenseNews.com',
+                'https://americanbriefing.com',
+                'https://goppresidential.com',
+                'https://americanupdate.com', #(also for lifestyle/celebrity key-terms)
+                'https://thehollywoodconservative.us', #(also for lifestyle/celebrity key-terms)
+                'https://prolifeupdate.com'
+]
+all_sites = [[x] for x in main_sites ]
+news_sites  = [
+    'https://www.foxnews.com',
+    'https://www.theepochtimes.com',
+    'https://www.washingtonexaminer.com',
+    'https://www.theblaze.com',
+    'https://www.newsmax.com',
+    'https://www.westernjournal.com',
+    'https://www.dailywire.com',
+    'https://www.nationalreview.com',
+    'https://www.thegatewaypundit.com',
+    'https://www.dailycaller.com',
+    'https://www.washingtontimes.com',
+    'https://www.townhall.com',
+    'https://www.breitbart.com',
+    'https://www.freebeacon.com',
+    'https://www.thefederalist.com',
+    'https://www.dailysignal.com',
+    'https://www.nypost.com',
+    'https://www.pjmedia.com',
+    'https://www.zerohedge.com',
+    'https://www.wsj.com',
+    'https://www.oann.com',
+    'https://www.realclearpolitics.com',
+    'https://americasvoice.news',
+    'https://www..AIM.org '
+]
+
+
+social_site = [
+    'facebook.com',
+    'twitter.com',
+    'instagram.com',
+    'tiktok.com/en/',
+]
+
+other_sites  = [
+    "drudgereport.com",
+    "foxbusiness.com",
+    "americanthinker.com",
+    "twitchy.com",
+    "wnd.com",
+    "hotair.com",
+    "thelibertydaily.com",
+    "justthenews.com",
+    "theconservativetreehouse.com",
+    "Waynedupree.com",
+    "ocregister.com",
+    "reason.com",
+    "freerepublic.com",
+    "bizpacreview.com",
+    "powerlineblog.com",
+    "amgreatness.com",
+    "newsbusters.org",
+    "nationalinterest.org",
+    "blog.heritage.org",
+    "cbn.com",
+    "weaselzippers.us",
+    "100percentfedup.com",
+    "therightscoop.com",
+    "lucianne.com",
+    "theamericanconservative.com",
+    "frontpagemag.com",
+    "spectator.org",
+    "cnsnews.com",
+    "ijr.com",
+    "Cato.org",
+    "legalinsurrection.com",
+    "hannity.com",
+    "city-journal.org",
+    "thefederalistpapers.org",
+    "aei.org",
+    "wattsupwiththat.com",
+    "fee.org",
+    "mises.org",
+    "independentsentinel.com",
+    "judicialwatch.org",
+    "bearingarms.com",
+    "amren.com",
+    "chicksonright.com",
+    "freedomworks.org",
+    "firstthings.com",
+    "thepoliticalinsider.com",
+    "ricochet.com",
+    "hoover.org",
+    "sharylattkisson.com",
+    "linkiest.com",
+    "gopbriefingroom.com",
+    "crisismagazine.com",
+    "lifenews.com",
+    "lifezette.com",
+    "humanevents.com",
+    "christianitytoday.com",
+    "redstatewatcher.com",
+    "conservativereview.com",
+    "strategypage.com",
+    "libertynation.com",
+    "atr.org",
+    "marklevinshow.com",
+    "algemeiner.com",
+    "rushlimbaugh.com",
+    "steynonline.com",
+    "cis.org",
+    "weeklystandard.com",
+    "independent.org",
+    "blog.independent.org",
+    "muckrock.com",
+    "cagle.com",
+    "anncoulter.com",
+    "borderlandbeat.com"
+]
+
+[all_sites.append(x) for x in   [social_site, news_sites, other_sites]]
+
+all_sites = [[x.replace("https://www.", '') for x in list_url] for list_url in all_sites]
+all_sites = [[x.replace("https://", '') for x in list_url] for list_url in all_sites]
+
+
+
+########## Start  Code #######################
+
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+nltk.download('stopwords')
+nltk.download('punkt')
+
+
+def get_main_words(query):
+    # Tokenize the query
+    words = word_tokenize(query)
+
+    # Convert words to lowercase
+    words = [word.lower() for word in words]
+
+    # Remove stop words
+    stop_words = set(stopwords.words('english'))
+    main_words = [word for word in words if word not in stop_words and word.isalnum()]
+
+    return main_words
+
+
+def calculate_relevance_score(result, query_terms):
+    title = result.get("title", "").lower()
+    snippet = result.get("snippet", "").lower()
+
+    score = 0
+    for term in query_terms:
+        if term in title:
+            score += 1
+        if term in snippet:
+            score += 1
+
+    return score
+
+
+def filter_results_by_relevance(results, query, relevance_threshold):
+    query_terms = query.lower().split()
+    filtered_results = []
+
+    for result in results:
+        score = calculate_relevance_score(result, query_terms)
+        if score >= relevance_threshold:
+            filtered_results.append(result)
+
+    return filtered_results
+
+
+import requests
+from concurrent.futures import ThreadPoolExecutor
+from concurrent import futures
+
+
+def bing_search(query, api_key='0d41c358d3054032848a866956b9a9f5', sites=None):
+    url = "https://api.bing.microsoft.com/v7.0/search"
+    headers = {"Ocp-Apim-Subscription-Key": api_key}
+    headers = {
+        "Ocp-Apim-Subscription-Key": api_key,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
+    }
+
+    if sites:
+        site_query = " OR ".join([f"site:{site}" for site in sites])
+        query = f"{query} {site_query}"
+    # print(len(str(query)))
+    params = {"q": query, "count": 10, "offset": 0}
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        # print(params)
+        # response = requests.get(url, headers=headers, params=params)
+        # if response.status_code == 200:
+        #     return response.json()
+        print(f"Error: {response.status_code}")
+        return None
+
+
+def concurrent_search(query, websites, search_fn, max_workers):
+    bing_api_key = "0d41c358d3054032848a866956b9a9f5"
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        search_tasks = [executor.submit(search_fn, query, bing_api_key, sites=site) for site in websites]
+        results = [task.result() for task in futures.as_completed(search_tasks)]
+
+    return results
+
+######### End Code #####################
+
+
+
+
+
+
+
+#############   End  Specific searches    ##########################
+
+
+
+
+
+
+
+from django.http import JsonResponse
+from .models import Main_sites, News_sites, Social_sites, Other_sites
+
+def create_sites(request):
+    main_sites_list = ['https://www.Conservapedia.com',
+               'https://www.Ballotpedia.com',
+               'https://www.Trumpttrainnews.com',
+               'https://www.AmericanActionNews.com',
+                'https://www.AmericanDefenseNews.com',
+                'https://americanbriefing.com',
+                'https://goppresidential.com',
+                'https://americanupdate.com', #(also for lifestyle/celebrity key-terms)
+                'https://thehollywoodconservative.us', #(also for lifestyle/celebrity key-terms)
+                'https://prolifeupdate.com']
+
+    news_sites_list = ['https://www.foxnews.com',
+    'https://www.theepochtimes.com',
+    'https://www.washingtonexaminer.com',
+    'https://www.theblaze.com',
+    'https://www.newsmax.com',
+    'https://www.westernjournal.com',
+    'https://www.dailywire.com',
+    'https://www.nationalreview.com',
+    'https://www.thegatewaypundit.com',
+    'https://www.dailycaller.com',
+    'https://www.washingtontimes.com',
+    'https://www.townhall.com',
+    'https://www.breitbart.com',
+    'https://www.freebeacon.com',
+    'https://www.thefederalist.com',
+    'https://www.dailysignal.com',
+    'https://www.nypost.com',
+    'https://www.pjmedia.com',
+    'https://www.zerohedge.com',
+    'https://www.wsj.com',
+    'https://www.oann.com',
+    'https://www.realclearpolitics.com',
+    'https://americasvoice.news',
+    'https://www.AIM.org ']
+
+    social_sites_list = ['https://www.facebook.com',
+    'https://www.twitter.com',
+    'https://www.instagram.com',
+    'https://www.tiktok.com/en/',]
+
+
+    other_sites_list = ["https://www.drudgereport.com",
+    "https://www.foxbusiness.com",
+    "https://www.americanthinker.com",
+    "https://www.twitchy.com",
+    "https://www.wnd.com",
+    "https://www.hotair.com",
+    "https://www.thelibertydaily.com",
+    "https://www.justthenews.com",
+    "https://www.theconservativetreehouse.com",
+    "https://www.Waynedupree.com",
+    "https://www.ocregister.com",
+    "https://www.reason.com",
+    "https://www.freerepublic.com",
+    "https://www.bizpacreview.com",
+    "https://www.powerlineblog.com",
+    "https://www.amgreatness.com",
+    "https://www.newsbusters.org",
+    "https://www.nationalinterest.org",
+    "https://blog.heritage.org",
+    "https://www.cbn.com",
+    "https://www.weaselzippers.us",
+    "https://www.100percentfedup.com",
+    "https://www.therightscoop.com",
+    "https://www.lucianne.com",
+    "https://www.theamericanconservative.com",
+    "https://www.frontpagemag.com",
+    "https://www.spectator.org",
+    "https://www.cnsnews.com",
+    "https://www.ijr.com",
+    "https://www.Cato.org",
+    "https://www.legalinsurrection.com",
+    "https://www.hannity.com",
+    "https://www.city-journal.org",
+    "https://www.thefederalistpapers.org",
+    "https://www.aei.org",
+    "https://www.wattsupwiththat.com",
+    "https://www.fee.org",
+    "https://www.mises.org",
+    "https://www.independentsentinel.com",
+    "https://www.judicialwatch.org",
+    "https://www.bearingarms.com",
+    "https://www.amren.com",
+    "https://www.chicksonright.com",
+    "https://www.freedomworks.org",
+    "https://www.firstthings.com",
+    "https://www.thepoliticalinsider.com",
+    "https://www.ricochet.com",
+    "https://www.hoover.org",
+    "https://www.sharylattkisson.com",
+    "https://www.linkiest.com",
+    "https://www.gopbriefingroom.com",
+    "https://www.crisismagazine.com",
+    "https://www.lifenews.com",
+    "https://www.lifezette.com",
+    "https://www.humanevents.com",
+    "https://www.christianitytoday.com",
+    "https://www.redstatewatcher.com",
+    "https://www.conservativereview.com",
+    "https://www.strategypage.com",
+    "https://www.libertynation.com",
+    "https://www.atr.org",
+    "https://www.marklevinshow.com",
+    "https://www.algemeiner.com",
+    "https://www.rushlimbaugh.com",
+    "https://www.steynonline.com",
+    "https://www.cis.org",
+    "https://www.weeklystandard.com",
+    "https://www.independent.org",
+    "https://blog.independent.org",
+    "https://www.muckrock.com",
+    "https://www.cagle.com",
+    "anncoulter.com",
+    "borderlandbeat.com"
+]
+
+    for site in main_sites_list:
+        Main_sites.objects.create(site=site)
+
+    for site in news_sites_list:
+        News_sites.objects.create(site=site)
+
+    for site in social_sites_list:
+        Social_sites.objects.create(site=site)
+
+    for site in other_sites_list:
+        Other_sites.objects.create(site=site)
+
+    response_data = {'success': True, 'message': 'Objects created successfully.'}
+    return JsonResponse(response_data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def index(request):
     pass
     return render(request, 'index.html',locals())
@@ -167,50 +555,115 @@ from search.models import *
 def search(request):
     query = request.GET.get('q') or request.POST.get('query')
     Searches.objects.create(query=query)
+
+    if 'B:' in query:
+        # Do something if the query has B:
+        print('Query has B:',query)
+        query = query.replace('B:', '')
+        # Do something with the modified query
+        print('Modified query:', query)
+        bing_result_web = web_bing(query)
+        print(bing_result_web)
+        direct_bing = "Direct bing"
+        return render(request, 'search.html', locals())
+    else:
+        # Do something else if the query does not have B:
+        print('Query does not have B:')
+        #############   Start  Specific searches    ##########################
+        results_concurrent = concurrent_search(query, all_sites, bing_search, max_workers=len(all_sites))
+        # print(results_concurrent)
+
+        all_results = []
+        for site_group in results_concurrent:
+            try:
+                print(len(site_group["webPages"]["value"]))
+                all_results.extend(site_group["webPages"]["value"])
+            except:
+                pass
+
+        # print("all_results",all_results)
+        # for page in all_results:
+        #     print(page['url'])
+        #     print(page['snippet'])
+
+        url_order = []
+        [[url_order.append(x) for x in group] for group in all_results]
+
+        def sort_by_url_order(result):
+            for i, base_url in enumerate(url_order):
+                if result['url'].startswith(base_url):
+                    return i
+            return len(url_order)
+
+        sorted_results = sorted(all_results, key=sort_by_url_order)
+
+        # for page in sorted_results:
+        #     print(page['url'])
+        #     print(page['snippet'])
+
+        main_words_list = get_main_words(query)
+        main_words = ' '.join(main_words_list)
+        # print(main_words)
+
+        # # Replace with your search function, e.g., bing_search or google_search
+        results = sorted_results
+
+        # # Filter the results by relevance
+        relevance_threshold = 1
+        filtered_results = filter_results_by_relevance(results, main_words, relevance_threshold)
+        #print(filtered_results)
+        # # Print the filtered results
+        # for idx, result in enumerate(filtered_results):
+        #     print(f"{idx + 1}: {result['snippet']} - {result['url']}")
+        #############   End  Specific searches    ##########################
+
+
+
+
     #Google
     # result = google_search(query)
     # items = result["items"]
     # total_results = result["searchInformation"]["totalResults"]
 
-    page = request.GET.get('page', 1)
-
-    url = "https://www.googleapis.com/customsearch/v1"
-    params = {
-        "q": query,
-        "key": 'AIzaSyDxBnA4Wwhh1sH3gFOZ2nQl_smU3uO3BBA',
-        "cx": "c772d9b1605014105",
-        "start": (int(page) - 1) * 10 + 1
-    }
-    response = requests.get(url, params=params)
-    result = response.json()
-    items = result["items"]
-    total_results = result["searchInformation"]["totalResults"]
-
-    for i, item in enumerate(items):
-        item['id_'] = i + 1
-
-        # Check if this item exists in the SearchResult model
-        try:
-            search_result = SearchResult.objects.get(title=item['title'])
-            position = search_result.position
-            # Calculate the new index of the item based on its position
-            new_index = position - 1
-            # If the new index is different from the default index, swap the item with the one at the new index
-            if new_index != i:
-                items[i], items[new_index] = items[new_index], items[i]
-                # Update the ID of the item that was swapped with the current item
-                items[new_index]['id_'] = new_index + 1
-                # Update the ID of the current item
-                item['id_'] = i + 1
-        except SearchResult.DoesNotExist:
-            pass
-
-        # Check if this item is blocked
-        if Blocked.objects.filter(title=item['title'], link=item['link']).exists():
-            items.remove(item)
-
-    paginator = Paginator(items, 10)
-    page_obj = paginator.get_page(page)
+    # page = request.GET.get('page', 1)
+    #
+    # url = "https://www.googleapis.com/customsearch/v1"
+    # params = {
+    #     "q": query,
+    #     "key": 'AIzaSyDxBnA4Wwhh1sH3gFOZ2nQl_smU3uO3BBA',
+    #     "cx": "c772d9b1605014105",
+    #     "start": (int(page) - 1) * 10 + 1
+    # }
+    # response = requests.get(url, params=params)
+    # result = response.json()
+    # items = result["items"]
+    # total_results = result["searchInformation"]["totalResults"]
+    #
+    # for i, item in enumerate(items):
+    #     item['id_'] = i + 1
+    #
+    #     # Check if this item exists in the SearchResult model
+    #     try:
+    #         search_result = SearchResult.objects.get(title=item['title'])
+    #         position = search_result.position
+    #         # Calculate the new index of the item based on its position
+    #         new_index = position - 1
+    #         # If the new index is different from the default index, swap the item with the one at the new index
+    #         if new_index != i:
+    #             items[i], items[new_index] = items[new_index], items[i]
+    #             # Update the ID of the item that was swapped with the current item
+    #             items[new_index]['id_'] = new_index + 1
+    #             # Update the ID of the current item
+    #             item['id_'] = i + 1
+    #     except SearchResult.DoesNotExist:
+    #         pass
+    #
+    #     # Check if this item is blocked
+    #     if Blocked.objects.filter(title=item['title'], link=item['link']).exists():
+    #         items.remove(item)
+    #
+    # paginator = Paginator(items, 10)
+    # page_obj = paginator.get_page(page)
 
 
 
@@ -228,7 +681,7 @@ def search(request):
 
 
     #Bing
-    #bing_result_web = web_bing(query)
+
     # bing_result_images = bing_images(query)
     # bing_news_list = bing_news(query)
     # bing_video_list    = bing_video(query)

@@ -4,3 +4,8 @@ from search.models import *
 admin.site.register(SearchResult)
 admin.site.register(Blocked)
 admin.site.register(Searches)
+
+admin.site.register(Main_sites)
+admin.site.register(News_sites)
+admin.site.register(Social_sites)
+admin.site.register(Other_sites)

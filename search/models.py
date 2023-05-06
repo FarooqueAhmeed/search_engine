@@ -24,3 +24,31 @@ class Searches(models.Model):
 
     def __str__(self):
         return f"{self.query} ({self.timestamp})"
+
+
+class Main_sites(models.Model):
+    site = models.CharField(null=True, blank=True, max_length=300)
+
+    def __str__(self):
+        return f"{self.site}"
+
+
+class News_sites(models.Model):
+    site = models.CharField(null=True, blank=True, max_length=300)
+
+    def __str__(self):
+        return f"{self.site}"
+
+class Social_sites(models.Model):
+    site = models.CharField(null=True, blank=True, max_length=300)
+
+    def __str__(self):
+        return f"{self.site}"
+
+
+class Other_sites(models.Model):
+    site = models.CharField(null=True, blank=True, max_length=300)
+
+    def __str__(self):
+        return f"{self.site}"
+
