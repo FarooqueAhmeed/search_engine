@@ -175,8 +175,8 @@
     <li>No results found.</li>
   {% endfor %}
 </ul>
-
-   {% elif results %}
+{% endif %}
+   {% if results %}
 
                 <ul id="search-results" style="list-style-type: none; padding-left: 222px;">
       {% for result in results %}
@@ -189,8 +189,8 @@
     <li>No results found.</li>
         {% endfor %}
           </ul>
-
-  {% else %}
+{% endif %}
+  {% if filtered_results %}
 
           <ul id="search-results" style="list-style-type: none; padding-left: 222px;">
       {% for result in filtered_results %}
@@ -485,6 +485,7 @@
 </ul>
 
 </div>
+
 
 
 

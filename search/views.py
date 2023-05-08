@@ -900,7 +900,7 @@ def search(request):
         print('Query does not have B:')
         #############   Start  Specific searches    ##########################
         results_concurrent = concurrent_search(query, all_sites, bing_search, max_workers=len(all_sites))
-        # print(results_concurrent)
+        print(results_concurrent)
 
         all_results = []
         for site_group in results_concurrent:
