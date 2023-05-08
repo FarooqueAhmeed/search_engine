@@ -155,6 +155,8 @@
 
   {% if direct_bing %}
      <p style="padding-left: 222px;"> Direct bing search ( B: )  </p>
+   {% elif limite_I %}
+      <p style="padding-left: 222px;"> Search ( I: )  </p>
   {% else %}
       <p style="padding-left: 222px;">  Specific websites search </p>
   {% endif %}
@@ -174,6 +176,20 @@
   {% endfor %}
 </ul>
 
+   {% elif results %}
+
+                <ul id="search-results" style="list-style-type: none; padding-left: 222px;">
+      {% for result in results %}
+          <li>
+                <h2>{{ result.0 }}</h2><!-- access title using dot notation -->
+                <a href="{{ result.1 }}">{{ result.1 }}</a> <!-- access link using array indexing with variable -->
+                <p>{{ result.2  }}</p> <!-- access snippet using dot notation -->
+          </li>
+            {% empty %}
+    <li>No results found.</li>
+        {% endfor %}
+          </ul>
+
   {% else %}
 
           <ul id="search-results" style="list-style-type: none; padding-left: 222px;">
@@ -183,6 +199,8 @@
                 <a href="{{ result.url }}">{{ result.displayUrl }}</a>
                 <p>{{ result.snippet }}</p>
           </li>
+            {% empty %}
+    <li>No results found.</li>
         {% endfor %}
           </ul>
 

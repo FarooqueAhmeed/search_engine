@@ -379,6 +379,321 @@ def create_sites(request):
 
 
 
+#############   Start  I: searches    ##########################
+
+
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+### Start Scrape  sites ####
+
+count = 0  # initialize count to 0
+
+def get_page_content(url):
+    global count  # use the global count variable inside this function
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+            # Create and save new Webpage objects
+            title = soup.find('title').get_text()
+            link = url
+            snippet = soup.get_text()[:100] + "..."
+            content = soup.get_text()
+
+            webpage, created = Scraped_general_sites_webpages.objects.get_or_create(title=title, link=link, content=content,
+                                                                           snippet=snippet)
+
+            if created:
+                print(f"-- New Scraped --")
+                count += 1  # increment count every time an object is created
+
+                # Print the count
+                print(f"Count : {count}", " == ", link)
+            else:
+                print(f"### -- Already exists -- ###")
+            return soup
+        else:
+            print(f"Error {response.status_code}: Unable to fetch {url}")
+    except Exception as e:
+        print(f"Error: Unable to fetch {url} due to {e}")
+
+
+def find_internal_links(soup, base_url):
+    internal_links = set()
+    for link in soup.find_all('a', href=True):
+        href = link['href']
+        if not href.startswith('http') and not href.startswith('mailto'):
+            full_url = urljoin(base_url, href)
+            internal_links.add(full_url)
+    return internal_links
+
+
+def crawl_website(url, max_depth=2, current_depth=1):
+    if current_depth > max_depth:
+        return {}
+
+    content_map = {}
+    soup = get_page_content(url)
+    if soup:
+        content_map[url] = soup.get_text()
+        # tile_map[url] = soup.find('title').get_text()
+        internal_links = find_internal_links(soup, url)
+        for link in internal_links:
+            content_map.update(crawl_website(link, max_depth, current_depth + 1))
+
+    return content_map
+
+
+
+def scrape_sites_list(request):
+
+    # List of websites to crawl
+    urls = [
+
+        # 'https://www.foxnews.com',
+        # 'https://www.theepochtimes.com',
+        # 'https://www.washingtonexaminer.com',
+        # 'https://www.theblaze.com',
+        # 'https://www.newsmax.com',
+        # 'https://www.westernjournal.com',
+        # 'https://www.dailywire.com',
+        # 'https://www.nationalreview.com',
+        # 'https://www.thegatewaypundit.com',
+        # 'https://www.dailycaller.com',
+        # 'https://www.washingtontimes.com',
+        # 'https://www.townhall.com',
+        # 'https://www.breitbart.com',
+        # 'https://www.freebeacon.com',
+        # 'https://www.thefederalist.com',
+        # 'https://www.dailysignal.com',
+        # 'https://www.nypost.com',
+        # 'https://www.pjmedia.com',
+        # 'https://www.zerohedge.com',
+        # 'https://www.wsj.com',
+        # 'https://www.oann.com',
+        # 'https://www.realclearpolitics.com',
+        # 'https://americasvoice.news',
+        # 'https://www.AIM.org ',
+        # 'https://www.bbc.com'
+
+
+         # General sites
+
+        # "https://www.drudgereport.com",
+        # "https://www.foxbusiness.com",
+        # "https://www.americanthinker.com",
+        # "https://www.twitchy.com",
+        # "https://www.wnd.com",
+        # "https://www.hotair.com",
+        # "https://www.thelibertydaily.com",
+        # "https://www.justthenews.com",
+        # "https://www.theconservativetreehouse.com",
+        # "https://www.Waynedupree.com",
+        # "https://www.ocregister.com",
+        # "https://www.reason.com",
+        # "https://www.freerepublic.com",
+        # "https://www.bizpacreview.com",
+        # "https://www.powerlineblog.com",
+        # "https://www.amgreatness.com",
+        # "https://www.newsbusters.org",
+        # "https://www.nationalinterest.org",
+        # "https://blog.heritage.org",
+        # "https://www.cbn.com",
+        # "https://www.weaselzippers.us",
+        # "https://www.100percentfedup.com",
+        # "https://www.therightscoop.com",
+        # "https://www.lucianne.com",
+        # "https://www.theamericanconservative.com",
+        # "https://www.frontpagemag.com",
+        # "https://www.spectator.org",
+        # "https://www.cnsnews.com",
+        # "https://www.ijr.com",
+        # "https://www.Cato.org",
+        # "https://www.legalinsurrection.com",
+        # "https://www.hannity.com",
+        # "https://www.city-journal.org",
+        # "https://www.thefederalistpapers.org",
+        # "https://www.aei.org",
+        # "https://www.wattsupwiththat.com",
+        # "https://www.fee.org",
+        # "https://www.mises.org",
+        # "https://www.independentsentinel.com",
+        # "https://www.judicialwatch.org",
+        # "https://www.bearingarms.com",
+        # "https://www.amren.com",
+        # "https://www.chicksonright.com",
+        # "https://www.freedomworks.org",
+        # "https://www.firstthings.com",
+        # "https://www.thepoliticalinsider.com",
+        # "https://www.ricochet.com",
+        # "https://www.hoover.org",
+        # "https://www.sharylattkisson.com",
+        # "https://www.linkiest.com",
+        # "https://www.gopbriefingroom.com",
+        # "https://www.crisismagazine.com",
+        # "https://www.lifenews.com",
+        # "https://www.lifezette.com",
+        # "https://www.humanevents.com",
+        # "https://www.christianitytoday.com",
+        # "https://www.redstatewatcher.com",
+        # "https://www.conservativereview.com",
+        # "https://www.strategypage.com",
+        # "https://www.libertynation.com",
+        # "https://www.atr.org",
+        # "https://www.marklevinshow.com",
+        # "https://www.algemeiner.com",
+        # "https://www.rushlimbaugh.com",
+        # "https://www.steynonline.com",
+        # "https://www.cis.org",
+        # "https://www.weeklystandard.com",
+        # "https://www.independent.org",
+        # "https://www.blog.independent.org",
+        # "https://www.muckrock.com",
+        # "https://www.cagle.com",
+        # "https://www.anncoulter.com",
+        # "https://www.borderlandbeat.com"
+
+
+    ]
+
+    # Crawl each website and store the content
+    content_map = {}
+    test_list = []
+    for url in urls:
+        crawl_website(url, max_depth=2)
+    print("Script finished running 1.")
+    for url, content in content_map.items():
+        print(f"URL: {url}")  # tilte : {content}")
+    print("Script finished running 2.")
+
+
+### end Scrape sites ####
+
+
+
+# ## Preprocess
+
+import nltk
+import string
+from sklearn.feature_extraction.text import TfidfVectorizer
+#from crawler.models import Website
+
+# Download the NLTK stopwords corpus
+nltk.download('stopwords')
+nltk.download('punkt')
+
+# Tokenization function
+def tokenize(text):
+    tokens = nltk.word_tokenize(text)
+    tokens = [token.lower() for token in tokens if token not in string.punctuation]
+    return tokens
+
+# Remove stopwords function
+def remove_stopwords(tokens):
+    stopwords = set(nltk.corpus.stopwords.words('english'))
+    return [token for token in tokens if token not in stopwords]
+
+# Preprocessing function
+def preprocess(text):
+    tokens = tokenize(text)
+    tokens = remove_stopwords(tokens)
+    return tokens
+
+
+def pre(request):
+    # Fetch the crawled data from the Django database
+    print("Started websites query")
+    websites = Scraped_general_sites_webpages.objects.all()
+    print("End websites query and started news sites query")
+    news_websites = Scraped_news_webpages.objects.all()
+    print("End news sites query")
+    urls = [website.link for website in websites]  # Access the 'link' field
+    news_urls = [website.link for website in news_websites]  # Access the 'link' field
+    urls = urls + news_urls
+    contents = [website.content for website in websites]  # Access the 'content' field
+    news_contents = [website.content for website in news_websites]  # Access the 'content' field
+    contents = contents + news_contents
+
+    # Preprocess the content
+    preprocessed_contents = [' '.join(preprocess(content)) for content in contents]
+
+    # Create the TF-IDF index
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(preprocessed_contents)
+
+    # Save the vectorizer and TF-IDF matrix for later use
+    import pickle
+
+    with open('vectorizer.pkl', 'wb') as f:
+        pickle.dump(vectorizer, f)
+
+    with open('tfidf_matrix.pkl', 'wb') as f:
+        pickle.dump(tfidf_matrix, f)
+
+    response_data = {'success': True, 'message': 'Objects created successfully.'}
+    return JsonResponse(response_data)
+
+
+
+
+
+##########################################################
+
+import numpy as np
+import pickle
+from sklearn.metrics.pairwise import cosine_similarity
+
+
+def I_search(query, top_n=10):
+    # Fetch the crawled data from the Django database
+    print("Started websites query")
+    general_sites = Scraped_general_sites_webpages.objects.all()
+    news_sites = Scraped_news_webpages.objects.all()
+    print("End websites and news sites query")
+
+    # Combine the results from both models
+    websites = list(general_sites) + list(news_sites)
+
+    # Extract the required fields from each website object
+    urls = [website.link for website in websites]
+    titles = [website.title for website in websites]
+    snippets = [website.snippet for website in websites]
+
+    # Preprocess the query
+    preprocessed_query = ' '.join(preprocess(query))
+    # Load the vectorizer and tfidf_matrix from disk
+    with open('vectorizer.pkl', 'rb') as f:
+        vectorizer = pickle.load(f)
+
+    with open('tfidf_matrix.pkl', 'rb') as f:
+        tfidf_matrix = pickle.load(f)
+    # Transform the query using the vectorizer
+    query_vector = vectorizer.transform([preprocessed_query])
+
+    # Calculate the cosine similarity between the query and documents
+    similarity_scores = cosine_similarity(query_vector, tfidf_matrix)
+
+    # Get the indices of the top_n most similar documents
+    most_similar_indices = np.argsort(similarity_scores[0])[-top_n:][::-1]
+
+    # Retrieve the fields of the most similar documents
+    most_similar_urls = [urls[i] for i in most_similar_indices]
+    most_similar_titles = [titles[i] for i in most_similar_indices]
+    most_similar_snippets = [snippets[i] for i in most_similar_indices]
+
+    # Return the most similar documents and their similarity scores
+    return [(most_similar_titles[i], most_similar_urls[i], most_similar_snippets[i], similarity_scores[0][i]) for i in range(len(most_similar_indices))]
+
+
+
+
+
+
+
+#############   End  I: searches    ##########################
+
 
 
 
@@ -566,6 +881,20 @@ def search(request):
         print(bing_result_web)
         direct_bing = "Direct bing"
         return render(request, 'search.html', locals())
+    elif 'I:' in query:
+        query = query.replace('I:', '')
+        print('Query has I:', query)
+        top_n = 5
+        results = I_search(query, top_n)
+        for result in results:
+            title, link, snippet, similarity_score = result
+            print(f"Title: {title}")
+            print(f"Link: {link}")
+            print(f"Snippet: {snippet}")
+            print(f"Similarity Score: {similarity_score}")
+            print()
+            limite_I = "Limited I: search"
+            return render(request, 'search.html', locals())
     else:
         # Do something else if the query does not have B:
         print('Query does not have B:')

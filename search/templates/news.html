@@ -107,8 +107,9 @@
     {% if bing_results %}
         <ul style="list-style-type: none; padding-left: 222px;">
         {% for item in bing_results %}
+            <h2>{{ item.name }}</h2>
             <li>
-                <a href="{{ item.url }}" target="_blank">{{ item.name }}</a><br>
+                <a href="{{ item.url }}" target="_blank">{{ item.url  }}</a><br>
                 {{ item.description }}
             </li>
         {% endfor %}

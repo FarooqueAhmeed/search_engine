@@ -12,5 +12,7 @@ urlpatterns = [
     path('update_position', views.update_position, name='update_position'),
     path('block_item', views.block_item, name='block_item'),
     path('create_sites', views.create_sites, name='create_sites'),
+    path('scrape_sites_list', views.scrape_sites_list, name='scrape_sites_list'),
+    path('pre', views.pre, name='pre'),
 
 ]

@@ -52,3 +52,22 @@ class Other_sites(models.Model):
     def __str__(self):
         return f"{self.site}"
 
+
+class Scraped_news_webpages(models.Model):
+    title = models.CharField(max_length=200)
+    link = models.URLField(max_length=200)
+    content = models.TextField()
+    snippet = models.TextField()
+
+    def __str__(self):
+        return self.title
+
+
+class Scraped_general_sites_webpages(models.Model):
+    title = models.CharField(max_length=200)
+    link = models.URLField(max_length=200)
+    content = models.TextField()
+    snippet = models.TextField()
+
+    def __str__(self):
+        return self.title

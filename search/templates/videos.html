@@ -76,17 +76,11 @@
         <ul style="list-style-type: none; padding-left: 222px;">
 
        {% for video in page_obj %}
-
+              <h2>{{ video.name }} </h2>
                 <li>
-                <a href="{{ video.url }}" target="_blank">{{ video.name }}</a>
+                <a href="{{ video.url }}" target="_blank">{{ video.url }}</a>
             </li>
 
-{#        <div class="video">#}
-{#            <h2>{{ video.name }}</h2>#}
-{#            <video controls>#}
-{#                <source src="{{ video.url }}" type="video/mp4">#}
-{#            </video>#}
-{#        </div>#}
     {% endfor %}
 
     {% if not page_obj %}
