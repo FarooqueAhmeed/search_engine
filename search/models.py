@@ -64,6 +64,7 @@ class Scraped_news_webpages(models.Model):
         return self.title
 
 
+
 class Scraped_general_sites_webpages(models.Model):
     title = models.CharField(max_length=200)
     link = models.URLField(max_length=200)
