@@ -410,7 +410,6 @@ def get_page_content(url):
                 source_tag = video_tag.find('source')
                 video_src = source_tag.get('src')
                 print("Video source:", video_src)
-
             # Print the images
             print(f"Images: {images}")
 
