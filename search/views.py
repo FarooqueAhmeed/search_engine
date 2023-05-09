@@ -414,22 +414,13 @@ def get_page_content(url):
             # Print the images
             print(f"Images: {images}")
 
-            # webpage, created = Scraped_general_sites_webpages.objects.get_or_create(title=title, link=link, content=content,
-            #                                                                snippet=snippet)
-            #
-            # if created:
-            #     print(f"-- New Scraped --")
-            #     count += 1  # increment count every time an object is created
-            #
-            #     # Print the count
-            #     print(f"Count : {count}", " == ", link)
-            # else:
-            #     print(f"### -- Already exists -- ###")
+
             return soup
         else:
             print(f"Error {response.status_code}: Unable to fetch {url}")
     except Exception as e:
         print(f"Error: Unable to fetch {url} due to {e}")
+
 
 
 def find_internal_links(soup, base_url):
@@ -466,29 +457,29 @@ def scrape_sites_list(request):
 
         'https://www.foxnews.com',
         'https://www.theepochtimes.com',
-        # 'https://www.washingtonexaminer.com',
-        # 'https://www.theblaze.com',
-        # 'https://www.newsmax.com',
-        # 'https://www.westernjournal.com',
-        # 'https://www.dailywire.com',
-        # 'https://www.nationalreview.com',
-        # 'https://www.thegatewaypundit.com',
-        # 'https://www.dailycaller.com',
-        # 'https://www.washingtontimes.com',
-        # 'https://www.townhall.com',
-        # 'https://www.breitbart.com',
-        # 'https://www.freebeacon.com',
-        # 'https://www.thefederalist.com',
-        # 'https://www.dailysignal.com',
-        # 'https://www.nypost.com',
-        # 'https://www.pjmedia.com',
-        # 'https://www.zerohedge.com',
-        # 'https://www.wsj.com',
-        # 'https://www.oann.com',
-        # 'https://www.realclearpolitics.com',
-        # 'https://americasvoice.news',
-        # 'https://www.AIM.org ',
-        # 'https://www.bbc.com'
+        'https://www.washingtonexaminer.com',
+        'https://www.theblaze.com',
+        'https://www.newsmax.com',
+        'https://www.westernjournal.com',
+        'https://www.dailywire.com',
+        'https://www.nationalreview.com',
+        'https://www.thegatewaypundit.com',
+        'https://www.dailycaller.com',
+        'https://www.washingtontimes.com',
+        'https://www.townhall.com',
+        'https://www.breitbart.com',
+        'https://www.freebeacon.com',
+        'https://www.thefederalist.com',
+        'https://www.dailysignal.com',
+        'https://www.nypost.com',
+        'https://www.pjmedia.com',
+        'https://www.zerohedge.com',
+        'https://www.wsj.com',
+        'https://www.oann.com',
+        'https://www.realclearpolitics.com',
+        'https://americasvoice.news',
+        'https://www.AIM.org ',
+        'https://www.bbc.com'
 
 
          # General sites
