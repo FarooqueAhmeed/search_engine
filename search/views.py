@@ -402,17 +402,40 @@ def get_page_content(url):
             snippet = soup.get_text()[:100] + "..."
             content = soup.get_text()
 
-            webpage, created = Scraped_general_sites_webpages.objects.get_or_create(title=title, link=link, content=content,
-                                                                           snippet=snippet)
+            # Get images
+            images = [img.get("src") for img in soup.find_all("img")]
+            # Get videos
+            test_list =[]
+            video_tags = soup.find_all('video')
+            for video_tag in video_tags:
+                source_tag = video_tag.find('source')
+                video_src = source_tag.get('src')
+                print("Video source:", video_src)
 
-            if created:
-                print(f"-- New Scraped --")
-                count += 1  # increment count every time an object is created
+            #test_list.append(video_tags)
+            #videos = [{'url': video.get('src')} for video in video_tags]
 
-                # Print the count
-                print(f"Count : {count}", " == ", link)
-            else:
-                print(f"### -- Already exists -- ###")
+            #print("videos :",videos)
+            #videos = soup.find_all('video')
+
+
+            # Print the images and videos
+            print(f"Images: {images}")
+            # for video in videos:
+            #     video_url = video['src']
+            #     print("video_url : ",video_url)
+
+            # webpage, created = Scraped_general_sites_webpages.objects.get_or_create(title=title, link=link, content=content,
+            #                                                                snippet=snippet)
+            #
+            # if created:
+            #     print(f"-- New Scraped --")
+            #     count += 1  # increment count every time an object is created
+            #
+            #     # Print the count
+            #     print(f"Count : {count}", " == ", link)
+            # else:
+            #     print(f"### -- Already exists -- ###")
             return soup
         else:
             print(f"Error {response.status_code}: Unable to fetch {url}")
@@ -452,7 +475,7 @@ def scrape_sites_list(request):
     # List of websites to crawl
     urls = [
 
-        # 'https://www.foxnews.com',
+        'https://www.foxnews.com',
         # 'https://www.theepochtimes.com',
         # 'https://www.washingtonexaminer.com',
         # 'https://www.theblaze.com',
