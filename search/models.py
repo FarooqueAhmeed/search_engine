@@ -58,6 +58,8 @@ class Scraped_news_webpages(models.Model):
     link = models.URLField(max_length=200)
     content = models.TextField()
     snippet = models.TextField()
+    video_src = models.URLField(blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return self.title
