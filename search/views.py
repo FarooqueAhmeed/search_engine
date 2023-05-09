@@ -405,25 +405,14 @@ def get_page_content(url):
             # Get images
             images = [img.get("src") for img in soup.find_all("img")]
             # Get videos
-            test_list =[]
             video_tags = soup.find_all('video')
             for video_tag in video_tags:
                 source_tag = video_tag.find('source')
                 video_src = source_tag.get('src')
                 print("Video source:", video_src)
 
-            #test_list.append(video_tags)
-            #videos = [{'url': video.get('src')} for video in video_tags]
-
-            #print("videos :",videos)
-            #videos = soup.find_all('video')
-
-
-            # Print the images and videos
+            # Print the images
             print(f"Images: {images}")
-            # for video in videos:
-            #     video_url = video['src']
-            #     print("video_url : ",video_url)
 
             # webpage, created = Scraped_general_sites_webpages.objects.get_or_create(title=title, link=link, content=content,
             #                                                                snippet=snippet)
@@ -476,7 +465,7 @@ def scrape_sites_list(request):
     urls = [
 
         'https://www.foxnews.com',
-        # 'https://www.theepochtimes.com',
+        'https://www.theepochtimes.com',
         # 'https://www.washingtonexaminer.com',
         # 'https://www.theblaze.com',
         # 'https://www.newsmax.com',
