@@ -406,14 +406,19 @@ def get_page_content(url):
             images = [img.get("src") for img in soup.find_all("img")]
             # Get videos
             video_tags = soup.find_all('video')
-            for video_tag in video_tags:
-                source_tag = video_tag.find('source')
-                video_src = source_tag.get('src')
-                print("Video source:", video_src)
-            # Print the images
-            print(f"Images: {images}")
+            video_src_list = [source_tag.get('src') for video_tag in video_tags for source_tag in video_tag.find_all('source')]
 
+            webpage, created = Scraped_general_sites_webpages.objects.get_or_create(title=title, link=link, content=content,
+                                                                           snippet=snippet,image_url=images,video_src=video_src_list)
 
+            if created:
+                print(f"-- New Scraped --")
+                count += 1  # increment count every time an object is created
+
+                # Print the count
+                print(f"Count : {count}", " == ", link)
+            else:
+                print(f"### -- Already exists -- ###")
             return soup
         else:
             print(f"Error {response.status_code}: Unable to fetch {url}")
@@ -454,31 +459,31 @@ def scrape_sites_list(request):
     # List of websites to crawl
     urls = [
 
-        'https://www.foxnews.com',
-        'https://www.theepochtimes.com',
-        'https://www.washingtonexaminer.com',
-        'https://www.theblaze.com',
-        'https://www.newsmax.com',
-        'https://www.westernjournal.com',
-        'https://www.dailywire.com',
-        'https://www.nationalreview.com',
-        'https://www.thegatewaypundit.com',
-        'https://www.dailycaller.com',
-        'https://www.washingtontimes.com',
-        'https://www.townhall.com',
-        'https://www.breitbart.com',
-        'https://www.freebeacon.com',
-        'https://www.thefederalist.com',
-        'https://www.dailysignal.com',
-        'https://www.nypost.com',
-        'https://www.pjmedia.com',
-        'https://www.zerohedge.com',
-        'https://www.wsj.com',
-        'https://www.oann.com',
-        'https://www.realclearpolitics.com',
-        'https://americasvoice.news',
-        'https://www.AIM.org ',
-        'https://www.bbc.com'
+        # 'https://www.foxnews.com',
+        # 'https://www.theepochtimes.com',
+        # 'https://www.washingtonexaminer.com',
+        # 'https://www.theblaze.com',
+        # 'https://www.newsmax.com',
+        # 'https://www.westernjournal.com',
+        # 'https://www.dailywire.com',
+        # 'https://www.nationalreview.com',
+        # 'https://www.thegatewaypundit.com',
+        # 'https://www.dailycaller.com',
+        # 'https://www.washingtontimes.com',
+        # 'https://www.townhall.com',
+        # 'https://www.breitbart.com',
+        # 'https://www.freebeacon.com',
+        # 'https://www.thefederalist.com',
+        # 'https://www.dailysignal.com',
+        # 'https://www.nypost.com',
+        # 'https://www.pjmedia.com',
+        # 'https://www.zerohedge.com',
+        # 'https://www.wsj.com',
+        # 'https://www.oann.com',
+        # 'https://www.realclearpolitics.com',
+        # 'https://americasvoice.news',
+        # 'https://www.AIM.org ',
+        # 'https://www.bbc.com'
 
 
          # General sites
@@ -606,11 +611,8 @@ def preprocess(text):
 
 def pre(request):
     # Fetch the crawled data from the Django database
-    print("Started websites query")
     websites = Scraped_general_sites_webpages.objects.all()
-    print("End websites query and started news sites query")
     news_websites = Scraped_news_webpages.objects.all()
-    print("End news sites query")
     urls = [website.link for website in websites]  # Access the 'link' field
     news_urls = [website.link for website in news_websites]  # Access the 'link' field
     urls = urls + news_urls
@@ -648,15 +650,58 @@ import pickle
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-def I_search(query, top_n=10):
+def I_search(query, top_n=30):
     # Fetch the crawled data from the Django database
-    print("Started websites query")
     general_sites = Scraped_general_sites_webpages.objects.all()
     news_sites = Scraped_news_webpages.objects.all()
-    print("End websites and news sites query")
 
     # Combine the results from both models
     websites = list(general_sites) + list(news_sites)
+
+    # Extract the required fields from each website object
+    urls = [website.link for website in websites]
+    titles = [website.title for website in websites]
+    snippets = [website.snippet for website in websites]
+    video_srcs = [website.video_src for website in websites]
+    image_urls = [website.image_url for website in websites]
+
+    # Preprocess the query
+    preprocessed_query = ' '.join(preprocess(query))
+    # Load the vectorizer and tfidf_matrix from disk
+    with open('vectorizer.pkl', 'rb') as f:
+        vectorizer = pickle.load(f)
+
+    with open('tfidf_matrix.pkl', 'rb') as f:
+        tfidf_matrix = pickle.load(f)
+    # Transform the query using the vectorizer
+    query_vector = vectorizer.transform([preprocessed_query])
+
+    # Calculate the cosine similarity between the query and documents
+    similarity_scores = cosine_similarity(query_vector, tfidf_matrix)
+
+    # Get the indices of the top_n most similar documents
+    most_similar_indices = np.argsort(similarity_scores[0])[-top_n:][::-1]
+
+    # Retrieve the fields of the most similar documents
+    most_similar_urls = [urls[i] for i in most_similar_indices]
+    most_similar_titles = [titles[i] for i in most_similar_indices]
+    most_similar_snippets = [snippets[i] for i in most_similar_indices]
+    most_similar_video_srcs = [video_srcs[i] for i in most_similar_indices]
+    most_similar_image_urls = [image_urls[i] for i in most_similar_indices]
+
+    # Return the most similar documents and their similarity scores
+    return [(most_similar_titles[i], most_similar_urls[i], most_similar_snippets[i],most_similar_video_srcs[i],most_similar_image_urls[i], similarity_scores[0][i]) for i in range(len(most_similar_indices))]
+
+
+
+
+def I_search_news(query, top_n=20):
+    # Fetch the crawled data from the Django database
+    #general_sites = Scraped_general_sites_webpages.objects.all()
+    news_sites = Scraped_news_webpages.objects.all()
+
+    # Combine the results from both models
+    websites = list(news_sites)
 
     # Extract the required fields from each website object
     urls = [website.link for website in websites]
@@ -685,11 +730,9 @@ def I_search(query, top_n=10):
     most_similar_titles = [titles[i] for i in most_similar_indices]
     most_similar_snippets = [snippets[i] for i in most_similar_indices]
 
+
     # Return the most similar documents and their similarity scores
-    return [(most_similar_titles[i], most_similar_urls[i], most_similar_snippets[i], similarity_scores[0][i]) for i in range(len(most_similar_indices))]
-
-
-
+    return [(most_similar_titles[i], most_similar_urls[i], most_similar_snippets[i],similarity_scores[0][i]) for i in range(len(most_similar_indices))]
 
 
 
@@ -877,26 +920,29 @@ def search(request):
         # Do something if the query has B:
         print('Query has B:',query)
         query = query.replace('B:', '')
-        # Do something with the modified query
-        print('Modified query:', query)
         bing_result_web = web_bing(query)
-        print(bing_result_web)
         direct_bing = "Direct bing"
+        if not query.startswith('B:'):
+            query = f'B:{query}'
         return render(request, 'search.html', locals())
     elif 'I:' in query:
         query = query.replace('I:', '')
-        print('Query has I:', query)
-        top_n = 5
+        top_n = 20
         results = I_search(query, top_n)
-        for result in results:
-            title, link, snippet, similarity_score = result
-            print(f"Title: {title}")
-            print(f"Link: {link}")
-            print(f"Snippet: {snippet}")
-            print(f"Similarity Score: {similarity_score}")
-            print()
-            limite_I = "Limited I: search"
-            return render(request, 'search.html', locals())
+        # Set the number of results per page
+        results_per_page = 5
+
+        # Create a paginator object
+        paginator = Paginator(results, results_per_page)
+
+        # Get the current page number from the GET parameters
+        page_number = request.GET.get('page')
+
+        # Get the results for the current page
+        page_obj = paginator.get_page(page_number)
+        results = page_obj
+        limite_I = "Limited I: search"
+        return render(request, 'search.html', locals())
     else:
         # Do something else if the query does not have B:
         print('Query does not have B:')
@@ -1034,18 +1080,27 @@ def bing_search_images_2(query, api_key):
 def google_images_search(request,query):
 
     #images
-    result_images = google_search_images(query, search_type="image")
-    images_items = result_images.get("items", [])
-    image_urls = [item.get("link", "") for item in images_items]
-    print("image_urls",image_urls)
-    # bing_result_images = bing_images(query)
-    # print("bing_result_images",bing_result_images)
-    bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
-    bing_results = bing_search_images_2(query, bing_api_key)
+    # result_images = google_search_images(query, search_type="image")
+    # images_items = result_images.get("items", [])
+    # image_urls = [item.get("link", "") for item in images_items]
+    # print("image_urls",image_urls)
+    # bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+    # bing_results = bing_search_images_2(query, bing_api_key)
+    # image_urls = []
+    # for item in bing_results.get("value", []):
+    #     image_urls.append(item['contentUrl'])
 
-    image_urls = []
-    for item in bing_results.get("value", []):
-        image_urls.append(item['contentUrl'])
+    if 'B:' in query:
+        query = query.replace('B:', '')
+        bing_result_images = bing_images(query)
+        print("bing_result_images", bing_result_images)
+        direct_bing = "Direct bing"
+        if not query.startswith('B:'):
+            query = f'B:{query}'
+        return render(request, 'google_images_search.html', locals())
+    else:
+       pass
+
     return render(request, 'google_images_search.html', locals())
 
 
@@ -1088,22 +1143,37 @@ def news(request, query):
    # news_list = get_news(query)
     #news_list = google_search_news_2(query)
     #bing_news_list = bing_news(query)
-    bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+    # bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+    #
+    # page_number = request.GET.get('page', 1)
+    # offset = (int(page_number) - 1) * 50
+    # bing_news_list = bing_search_news_2(query, bing_api_key, offset)
+    #
+    # paginator = Paginator(bing_news_list['value'], 10)
+    #
+    # page_obj = paginator.get_page(page_number)
+    #
+    # context = {
+    #     'bing_results': page_obj,
+    #     #'news_list': news_list,
+    #     'query': query,
+    # }
+    top_n = 30
+    results = I_search(query, top_n)
+    # Set the number of results per page
+    results_per_page = 10
 
-    page_number = request.GET.get('page', 1)
-    offset = (int(page_number) - 1) * 50
-    bing_news_list = bing_search_news_2(query, bing_api_key, offset)
+    # Create a paginator object
+    paginator = Paginator(results, results_per_page)
 
-    paginator = Paginator(bing_news_list['value'], 10)
+    # Get the current page number from the GET parameters
+    page_number = request.GET.get('page')
 
+    # Get the results for the current page
     page_obj = paginator.get_page(page_number)
 
-    context = {
-        'bing_results': page_obj,
-        #'news_list': news_list,
-        'query': query,
-    }
-    return render(request, 'news.html', context)
+
+    return render(request, 'news.html', locals())
 
 
 
@@ -1119,23 +1189,31 @@ def bing_search_videos_2(query, api_key, offset=0):
 def videos(request,query):
     #videos
     #video_results = get_video_results(query)
+    if 'B:' in query:
+        query = query.replace('B:', '')
+        bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+        videos = []
+        page_number = int(request.GET.get('page', 1))
 
-    bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
-    videos = []
-    page_number = int(request.GET.get('page', 1))
+        # Call Bing API with pagination
+        for offset in range((page_number - 1) * 50, page_number * 50, 50):
+            bing_results = bing_search_videos_2(query, bing_api_key, offset)
+            for item in bing_results.get("value", []):
+                name = item["name"]
+                url = item["contentUrl"]
+                videos.append({"name": name, "url": url})
+        print(videos)
+        # Use Django's built-in paginator to paginate the results
+        paginator = Paginator(videos, 10)
+        page_obj = paginator.get_page(page_number)
 
+        direct_bing = "Direct bing"
+        if not query.startswith('B:'):
+            query = f'B:{query}'
+        return render(request, 'videos.html', locals())
+    else:
+        page_obj =[]
 
-    # Call Bing API with pagination
-    for offset in range((page_number - 1) * 50, page_number * 50, 50):
-        bing_results = bing_search_videos_2(query, bing_api_key, offset)
-        for item in bing_results.get("value", []):
-            name = item["name"]
-            url = item["contentUrl"]
-            videos.append({"name": name, "url": url})
-
-    # Use Django's built-in paginator to paginate the results
-    paginator = Paginator(videos, 10)
-    page_obj = paginator.get_page(page_number)
 
     #bing_video_list    = bing_video(query)
     return render(request, 'videos.html', locals())

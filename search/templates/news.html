@@ -104,13 +104,13 @@
 
 
 
-    {% if bing_results %}
+    {% if results %}
         <ul style="list-style-type: none; padding-left: 222px;">
-        {% for item in bing_results %}
-            <h2>{{ item.name }}</h2>
+        {% for item in results %}
+            <h2>{{ item.0 }}</h2>
             <li>
-                <a href="{{ item.url }}" target="_blank">{{ item.url  }}</a><br>
-                {{ item.description }}
+                <a href="{{ item.1}}" target="_blank">{{ item.1  }}</a><br>
+                {{ item.2 }}
             </li>
         {% endfor %}
         </ul>
@@ -118,26 +118,42 @@
         <p>No results found.</p>
     {% endif %}
 
+<div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?q={{ query }}&page=1">&laquo; First</a>
+                <a href="?q={{ query }}&page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
 
+            <span class="current-page">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
 
-
-<div class="pagination" style=" padding-left: 222px;">
-    <span class="step-links">
-        {% if bing_results.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ bing_results.previous_page_number }}">previous</a>
-        {% endif %}
-
-        <span class="current-page">
-            Page {{ bing_results.number }} of {{ bing_results.paginator.num_pages }}.
+            {% if page_obj.has_next %}
+                <a href="?q={{ query }}&page={{ page_obj.next_page_number }}">next</a>
+                <a href="?q={{ query }}&page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            {% endif %}
         </span>
+    </div>
 
-        {% if bing_results.has_next %}
-            <a href="?page={{ bing_results.next_page_number }}">next</a>
-            <a href="?page={{ bing_results.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
+
+{#<div class="pagination" style=" padding-left: 222px;">#}
+{#    <span class="step-links">#}
+{#        {% if bing_results.has_previous %}#}
+{#            <a href="?page=1">&laquo; first</a>#}
+{#            <a href="?page={{ bing_results.previous_page_number }}">previous</a>#}
+{#        {% endif %}#}
+{##}
+{#        <span class="current-page">#}
+{#            Page {{ bing_results.number }} of {{ bing_results.paginator.num_pages }}.#}
+{#        </span>#}
+{##}
+{#        {% if bing_results.has_next %}#}
+{#            <a href="?page={{ bing_results.next_page_number }}">next</a>#}
+{#            <a href="?page={{ bing_results.paginator.num_pages }}">last &raquo;</a>#}
+{#        {% endif %}#}
+{#    </span>#}
+{#</div>#}
 
 
 

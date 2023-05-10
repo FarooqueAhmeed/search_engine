@@ -64,15 +64,15 @@
   <div class="" >
 
 <div class="row row-cols-1 row-cols-md-3 g-3">
-  {% for image_url in image_urls %}
-    <div class="col">
-      <div class="card">
-        <img src="{{ image_url }}" class="card-img-top" alt="{{ query }}">
-      </div>
-    </div>
-  {% empty %}
-    <p>No results found.</p>
-  {% endfor %}
+{#  {% for image_url in image_urls %}#}
+{#    <div class="col">#}
+{#      <div class="card">#}
+{#        <img src="{{ image_url }}" class="card-img-top" alt="{{ query }}">#}
+{#      </div>#}
+{#    </div>#}
+{#  {% empty %}#}
+{#    <p>No results found.</p>#}
+{#  {% endfor %}#}
 
 {#<div class="image-grid">#}
 {#    {% for url in image_urls %}#}
@@ -82,7 +82,7 @@
 {#    {% endfor %}#}
 {#  </div>#}
 
-  {% for url in image_urls %}
+  {% for url in bing_result_images %}
     <div class="col">
       <div class="card">
         <img src="{{ url }}" class="card-img-top" alt="{{ query }}">
