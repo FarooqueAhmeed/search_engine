@@ -40,6 +40,9 @@
   <li class="nav-item" >
     <a class="nav-link " href="{% url 'search' %}?q={{ query }}" type="button" >All</a>
   </li>
+          <li class="nav-item" >
+    <a class="nav-link" type="button"  href="{% url 'videos' query %}">Videos</a>
+  </li>
 <li class="nav-item" >
   <a class="nav-link active"  href="{% url 'google_images_search' query %}" type="button" >Images</a>
 </li>
@@ -47,9 +50,7 @@
       <li class="nav-item" >
     <a class="nav-link " type="button"  href="{% url 'news' query %}">News</a>
   </li>
-      <li class="nav-item" >
-    <a class="nav-link" type="button"  href="{% url 'videos' query %}">Videos</a>
-  </li>
+
 
           <li class="nav-item" role="presentation">
     <button class="nav-link" id="pills-shopping-tab" data-bs-toggle="pill" data-bs-target="#pills-shopping" type="button" role="tab" aria-controls="pills-shopping" aria-selected="false">Shopping</button>
@@ -81,6 +82,20 @@
 {#      </div>#}
 {#    {% endfor %}#}
 {#  </div>#}
+
+
+{% for result in results %}
+    <div class="col">
+      <div class="card">
+        <img src="{{ result.4 }}" class="card-img-top" alt="Link is broken">
+      </div>
+    </div>
+  {% empty %}
+    <p>No results found.</p>
+  {% endfor %}
+
+
+
 
   {% for url in bing_result_images %}
     <div class="col">

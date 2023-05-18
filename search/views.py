@@ -216,7 +216,7 @@ def bing_search(query, api_key='0d41c358d3054032848a866956b9a9f5', sites=None):
 
 
 def concurrent_search(query, websites, search_fn, max_workers):
-    bing_api_key = "0d41c358d3054032848a866956b9a9f5"
+    bing_api_key = "79407ee4a67041b5a12cbe23c684dbe5"
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         search_tasks = [executor.submit(search_fn, query, bing_api_key, sites=site) for site in websites]
         results = [task.result() for task in futures.as_completed(search_tasks)]
@@ -402,21 +402,42 @@ def get_page_content(url):
             snippet = soup.get_text()[:100] + "..."
             content = soup.get_text()
 
-            # Get images
-            images = [img.get("src") for img in soup.find_all("img")]
-            # Get videos
-            video_tags = soup.find_all('video')
-            video_src_list = [source_tag.get('src') for video_tag in video_tags for source_tag in video_tag.find_all('source')]
+            # Get the first image with an "https" URL
+            image_url = None
+            for img in soup.find_all("img"):
+                src = img.get("src")
+                if src.startswith("https"):
+                    image_url = src
+                    break  # Stop after finding the first image with "https"
 
-            webpage, created = Scraped_general_sites_webpages.objects.get_or_create(title=title, link=link, content=content,
-                                                                           snippet=snippet,image_url=images,video_src=video_src_list)
+            # Get the first video source with an "https" URL
+            video_src = None
+            video_tags = soup.find_all('video')
+            for video_tag in video_tags:
+                sources = video_tag.find_all('source')
+                for source_tag in sources:
+                    src = source_tag.get('src')
+                    if src.startswith("https"):
+                        video_src = src
+                        break  # Stop after finding the first video source with "https"
+                if video_src:
+                    break  # Stop iterating over video tags if a video source is found
+
+            webpage, created = Scraped_news_webpages.objects.get_or_create(
+                title=title,
+                link=link,
+                content=content,
+                snippet=snippet,
+                image_url=image_url,
+                video_src=video_src
+            )
 
             if created:
                 print(f"-- New Scraped --")
                 count += 1  # increment count every time an object is created
 
                 # Print the count
-                print(f"Count : {count}", " == ", link)
+                print(f"Count: {count} == {image_url}", "vid src ==", video_src)
             else:
                 print(f"### -- Already exists -- ###")
             return soup
@@ -424,6 +445,8 @@ def get_page_content(url):
             print(f"Error {response.status_code}: Unable to fetch {url}")
     except Exception as e:
         print(f"Error: Unable to fetch {url} due to {e}")
+
+
 
 
 
@@ -459,7 +482,7 @@ def scrape_sites_list(request):
     # List of websites to crawl
     urls = [
 
-        # 'https://www.foxnews.com',
+        'https://www.foxnews.com',
         # 'https://www.theepochtimes.com',
         # 'https://www.washingtonexaminer.com',
         # 'https://www.theblaze.com',
@@ -656,6 +679,8 @@ def I_search(query, top_n=30):
     news_sites = Scraped_news_webpages.objects.all()
 
     # Combine the results from both models
+    #
+    #general_sites = []
     websites = list(general_sites) + list(news_sites)
 
     # Extract the required fields from each website object
@@ -921,6 +946,31 @@ def search(request):
         print('Query has B:',query)
         query = query.replace('B:', '')
         bing_result_web = web_bing(query)
+        items = bing_result_web
+        for i, item in enumerate(items):
+            item['id_'] = i + 1
+
+            # Check if this item exists in the SearchResult model
+            try:
+                search_result = SearchResult.objects.get(title=item['title'])
+                position = search_result.position
+                # Calculate the new index of the item based on its position
+                new_index = position - 1
+                # If the new index is different from the default index, swap the item with the one at the new index
+                if new_index != i:
+                    items[i], items[new_index] = items[new_index], items[i]
+                    # Update the ID of the item that was swapped with the current item
+                    items[new_index]['id_'] = new_index + 1
+                    # Update the ID of the current item
+                    item['id_'] = i + 1
+            except SearchResult.DoesNotExist:
+                pass
+
+            # Check if this item is blocked
+            if Blocked.objects.filter(title=item['title'], link=item['url']).exists():
+                items.remove(item)
+
+        bing_result_web = items
         direct_bing = "Direct bing"
         if not query.startswith('B:'):
             query = f'B:{query}'
@@ -942,13 +992,15 @@ def search(request):
         page_obj = paginator.get_page(page_number)
         results = page_obj
         limite_I = "Limited I: search"
+        if not query.startswith('I:'):
+            query = f'I:{query}'
         return render(request, 'search.html', locals())
     else:
         # Do something else if the query does not have B:
         print('Query does not have B:')
         #############   Start  Specific searches    ##########################
         results_concurrent = concurrent_search(query, all_sites, bing_search, max_workers=len(all_sites))
-        print(results_concurrent)
+        #print(results_concurrent)
 
         all_results = []
         for site_group in results_concurrent:
@@ -990,8 +1042,8 @@ def search(request):
         filtered_results = filter_results_by_relevance(results, main_words, relevance_threshold)
         #print(filtered_results)
         # # Print the filtered results
-        # for idx, result in enumerate(filtered_results):
-        #     print(f"{idx + 1}: {result['snippet']} - {result['url']}")
+        for idx, result in enumerate(filtered_results):
+            print(f"{idx + 1}: {result['snippet']} - {result['url']}")
         #############   End  Specific searches    ##########################
 
 
@@ -1067,6 +1119,222 @@ def search(request):
     return render(request, 'search.html', locals())
 
 
+def adminsearch(request):
+    pass
+    return render(request, 'adminsearch.html',locals())
+
+
+def adminsearchindexing(request):
+    query = request.GET.get('q') or request.POST.get('query')
+    Searches.objects.create(query=query)
+
+    if 'B:' in query:
+        # Do something if the query has B:
+        print('Query has B:',query)
+        query = query.replace('B:', '')
+        bing_result_web = web_bing(query)
+        print(type(bing_result_web))
+        items = bing_result_web
+        for i, item in enumerate(items):
+            item['id_'] = i + 1
+
+            # Check if this item exists in the SearchResult model
+            try:
+                search_result = SearchResult.objects.get(title=item['title'])
+                position = search_result.position
+                # Calculate the new index of the item based on its position
+                new_index = position - 1
+                # If the new index is different from the default index, swap the item with the one at the new index
+                if new_index != i:
+                    items[i], items[new_index] = items[new_index], items[i]
+                    # Update the ID of the item that was swapped with the current item
+                    items[new_index]['id_'] = new_index + 1
+                    # Update the ID of the current item
+                    item['id_'] = i + 1
+            except SearchResult.DoesNotExist:
+                pass
+
+            # Check if this item is blocked
+            if Blocked.objects.filter(title=item['title'], link=item['url']).exists():
+                items.remove(item)
+
+        bing_result_web = items
+
+
+
+        direct_bing = "Direct bing"
+        if not query.startswith('B:'):
+            query = f'B:{query}'
+        return render(request, 'adminsearchindexing.html', locals())
+    elif 'I:' in query:
+        query = query.replace('I:', '')
+        top_n = 5
+        results = I_search(query, top_n)
+        items = list(results)
+        print(type(items))
+
+        for i, item in enumerate(items):
+            item_dict = {'id_': i + 1, 'title': item[0], 'url': item[1]}
+            search_result = SearchResult.objects.filter(title=item_dict['title']).first()
+
+            if search_result:
+                position = search_result.position
+                new_index = position - 1
+
+                if new_index != i:
+                    items[i], items[new_index] = items[new_index], items[i]
+                    items[i] = (i + 1, items[i][1])  # Create a new tuple with the updated id_
+                    items[new_index] = (new_index + 1, items[new_index][1])  # Create a new tuple with the updated id_
+
+            if Blocked.objects.filter(title=item_dict['title'], link=item_dict['url']).exists():
+                items.remove(item)
+
+        results = items
+
+        for item in results:
+            print(f"id_: {item[0]}, url: {item[1]}")
+
+        limite_I = "Limited I: search"
+        if not query.startswith('I:'):
+            query = f'I:{query}'
+        return render(request, 'adminsearchindexing.html', locals())
+    else:
+        # Do something else if the query does not have B:
+        print('Query does not have B:')
+        #############   Start  Specific searches    ##########################
+        results_concurrent = concurrent_search(query, all_sites, bing_search, max_workers=len(all_sites))
+        #print(results_concurrent)
+
+        all_results = []
+        for site_group in results_concurrent:
+            try:
+                print(len(site_group["webPages"]["value"]))
+                all_results.extend(site_group["webPages"]["value"])
+            except:
+                pass
+
+        # print("all_results",all_results)
+        # for page in all_results:
+        #     print(page['url'])
+        #     print(page['snippet'])
+
+        url_order = []
+        [[url_order.append(x) for x in group] for group in all_results]
+
+        def sort_by_url_order(result):
+            for i, base_url in enumerate(url_order):
+                if result['url'].startswith(base_url):
+                    return i
+            return len(url_order)
+
+        sorted_results = sorted(all_results, key=sort_by_url_order)
+
+        # for page in sorted_results:
+        #     print(page['url'])
+        #     print(page['snippet'])
+
+        main_words_list = get_main_words(query)
+        main_words = ' '.join(main_words_list)
+        # print(main_words)
+
+        # # Replace with your search function, e.g., bing_search or google_search
+        results1 = sorted_results
+
+        # # Filter the results by relevance
+        relevance_threshold = 1
+        filtered_results = filter_results_by_relevance(results1, main_words, relevance_threshold)
+        #print(filtered_results)
+        # # Print the filtered results
+        for idx, result in enumerate(filtered_results):
+            print(f"{result['name']} - {result['url']}")
+
+
+        return render(request, 'adminsearchindexing.html', locals())
+
+
+
+        #############   End  Specific searches    ##########################
+
+
+
+
+    #Google
+    # result = google_search(query)
+    # items = result["items"]
+    # total_results = result["searchInformation"]["totalResults"]
+
+    # page = request.GET.get('page', 1)
+    #
+    # url = "https://www.googleapis.com/customsearch/v1"
+    # params = {
+    #     "q": query,
+    #     "key": 'AIzaSyDxBnA4Wwhh1sH3gFOZ2nQl_smU3uO3BBA',
+    #     "cx": "c772d9b1605014105",
+    #     "start": (int(page) - 1) * 10 + 1
+    # }
+    # response = requests.get(url, params=params)
+    # result = response.json()
+    # items = result["items"]
+    # total_results = result["searchInformation"]["totalResults"]
+    #
+    # for i, item in enumerate(items):
+    #     item['id_'] = i + 1
+    #
+    #     # Check if this item exists in the SearchResult model
+    #     try:
+    #         search_result = SearchResult.objects.get(title=item['title'])
+    #         position = search_result.position
+    #         # Calculate the new index of the item based on its position
+    #         new_index = position - 1
+    #         # If the new index is different from the default index, swap the item with the one at the new index
+    #         if new_index != i:
+    #             items[i], items[new_index] = items[new_index], items[i]
+    #             # Update the ID of the item that was swapped with the current item
+    #             items[new_index]['id_'] = new_index + 1
+    #             # Update the ID of the current item
+    #             item['id_'] = i + 1
+    #     except SearchResult.DoesNotExist:
+    #         pass
+    #
+    #     # Check if this item is blocked
+    #     if Blocked.objects.filter(title=item['title'], link=item['link']).exists():
+    #         items.remove(item)
+    #
+    # paginator = Paginator(items, 10)
+    # page_obj = paginator.get_page(page)
+
+
+
+
+    #images
+    # result_images = google_search_images(query, search_type="image")
+    # images_items = result_images.get("items", [])
+    # image_urls = [item.get("link", "") for item in images_items]
+
+    # #news
+    # news_list = get_news(query)
+
+    # #videos
+    # video_results = get_video_results(query)
+
+
+    #Bing
+
+    # bing_result_images = bing_images(query)
+    # bing_news_list = bing_news(query)
+    # bing_video_list    = bing_video(query)
+
+
+    #return render(request, 'adminsearchindexing.html', locals())
+
+
+
+
+
+
+
+
+
 
 def bing_search_images_2(query, api_key):
     url = "https://api.bing.microsoft.com/v7.0/images/search"
@@ -1098,8 +1366,27 @@ def google_images_search(request,query):
         if not query.startswith('B:'):
             query = f'B:{query}'
         return render(request, 'google_images_search.html', locals())
+    elif 'I:' in query:
+        query = query.replace('I:', '')
+        top_n = 20
+        results = I_search(query, top_n)
+        # Convert the results to a list of lists
+        results = [list(result) for result in results]
+
+        # Convert the image URLs to strings
+        for result in results:
+            title, url, snippet, video_src, image_url, similarity_score = result
+            if isinstance(image_url, list):
+                result[4] = image_url[0] if image_url else None
+            else:
+                result[4] = image_url
+        if not query.startswith('I:'):
+            query = f'I:{query}'
+        limite_I = "Limited I: search"
+        return render(request, 'google_images_search.html', locals())
     else:
-       pass
+        bing_result_images = bing_images(query)
+        print("bing_result_images", bing_result_images)
 
     return render(request, 'google_images_search.html', locals())
 
@@ -1191,13 +1478,14 @@ def videos(request,query):
     #video_results = get_video_results(query)
     if 'B:' in query:
         query = query.replace('B:', '')
-        bing_api_key = "0d41c358d3054032848a866956b9a9f5"  # Replace with your Bing API key
+        bing_api_key = "79407ee4a67041b5a12cbe23c684dbe5"  # Replace with your Bing API key
         videos = []
         page_number = int(request.GET.get('page', 1))
 
         # Call Bing API with pagination
         for offset in range((page_number - 1) * 50, page_number * 50, 50):
             bing_results = bing_search_videos_2(query, bing_api_key, offset)
+            print("bing_results v ",bing_results)
             for item in bing_results.get("value", []):
                 name = item["name"]
                 url = item["contentUrl"]
@@ -1211,8 +1499,43 @@ def videos(request,query):
         if not query.startswith('B:'):
             query = f'B:{query}'
         return render(request, 'videos.html', locals())
+    elif 'I:' in query:
+        query = query.replace('I:', '')
+        top_n = 20
+        results = I_search(query, top_n)
+        print("results : ",results)
+        filtered_results = []
+
+        for result in results:
+            title, url, snippet, video_src, image_url, similarity_score = result
+            try:
+                if video_src.startswith("https"):
+                    filtered_results.append(result)
+            except:
+                pass
+        if not query.startswith('I:'):
+            query = f'I:{query}'
+        limite_I = "Limited I: search"
+        return render(request, 'videos.html', locals())
     else:
-        page_obj =[]
+        bing_api_key = "79407ee4a67041b5a12cbe23c684dbe5"  # Replace with your Bing API key
+        videos = []
+        page_number = int(request.GET.get('page', 1))
+
+        # Call Bing API with pagination
+        for offset in range((page_number - 1) * 50, page_number * 50, 50):
+            bing_results = bing_search_videos_2(query, bing_api_key, offset)
+            print("bing_results v ", bing_results)
+            for item in bing_results.get("value", []):
+                name = item["name"]
+                url = item["contentUrl"]
+                videos.append({"name": name, "url": url})
+        print(videos)
+        # Use Django's built-in paginator to paginate the results
+        paginator = Paginator(videos, 10)
+        page_obj = paginator.get_page(page_number)
+
+
 
 
     #bing_video_list    = bing_video(query)
@@ -1263,7 +1586,7 @@ def block_item(request):
         link = request.POST.get('link')
         query = request.POST.get('query')
         Blocked.objects.create(title=title, link=link, is_blocked=True)
-        return redirect(reverse('search') + f'?q={query}')
+        return redirect(reverse('adminsearchindexing') + f'?q={query}')
     else:
         return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
 

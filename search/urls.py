@@ -6,6 +6,8 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('search', views.search, name='search'),
+    path('adminsearch', views.adminsearch, name='adminsearch'),
+    path('adminsearchindexing', views.adminsearchindexing, name='adminsearchindexing'),
     path('google_images_search/<str:query>', views.google_images_search, name='google_images_search'),
     path('news/<str:query>', views.news, name='news'),
     path('videos/<str:query>', views.videos, name='videos'),

@@ -40,6 +40,9 @@
   <li class="nav-item" >
     <a class="nav-link " href="{% url 'search' %}?q={{ query }}" type="button" >All</a>
   </li>
+          <li class="nav-item" >
+    <a class="nav-link active" type="button"  href="{% url 'videos' query %}">Videos</a>
+  </li>
 <li class="nav-item" >
   <a class="nav-link "  href="{% url 'google_images_search' query %}" type="button" >Images</a>
 </li>
@@ -47,9 +50,7 @@
       <li class="nav-item" >
     <a class="nav-link " type="button"  href="{% url 'news' query %}">News</a>
   </li>
-      <li class="nav-item" >
-    <a class="nav-link active" type="button"  href="{% url 'videos' query %}">Videos</a>
-  </li>
+
 
           <li class="nav-item" role="presentation">
     <button class="nav-link" id="pills-shopping-tab" data-bs-toggle="pill" data-bs-target="#pills-shopping" type="button" role="tab" aria-controls="pills-shopping" aria-selected="false">Shopping</button>
@@ -73,6 +74,28 @@
 
 <div >
 
+
+  <ul style="list-style-type: none; padding-left: 222px;">
+
+       {% for result in filtered_results %}
+           {% if result.3 %}
+              <h2>{{result.0 }} </h2>
+                <li>
+                <a href="{{ result.3 }}" target="_blank">{{ result.3}}</a>
+               </li>
+               <li>
+               <p>{{ result.2 }} </p>
+               </li>
+          {% else %}
+          {% endif %}
+
+    {% endfor %}
+
+        </ul>
+
+
+
+
         <ul style="list-style-type: none; padding-left: 222px;">
 
        {% for video in page_obj %}
@@ -86,8 +109,6 @@
     {% if not page_obj %}
         <p>No videos found.</p>
     {% endif %}
-
-
 
         </ul>
 
